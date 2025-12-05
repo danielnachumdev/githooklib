@@ -8,6 +8,7 @@ from .gateways.module_import_gateway import ModuleImportGateway
 from .services.hook_discovery_service import HookDiscoveryService
 from .services.hook_management_service import HookManagementService
 from .services.error_message_service import ErrorMessageService
+from .services.hook_seeding_service import HookSeedingService
 
 
 class API:
@@ -38,8 +39,8 @@ class API:
             self.hook_discovery_service
         )
         self.error_message_service = ErrorMessageService(
-            self.hook_discovery_service
-        )
+            self.hook_discovery_service)
+        self.hook_seeding_service = HookSeedingService(project_root_gateway)
         self.git_repository_gateway = git_repository_gateway
 
     def discover_hooks(self) -> dict[str, type[GitHook]]:
@@ -74,8 +75,14 @@ class API:
         self.hook_discovery_service.set_hook_search_paths(list(hook_paths))
 
     def get_hook_not_found_error_message(self, hook_name: str) -> str:
-        return self.error_message_service.get_hook_not_found_error_message(
-            hook_name
+        return self.error_message_service.get_hook_not_found_error_message(hook_name)
+
+    def get_available_examples(self) -> list[str]:
+        return self.hook_seeding_service.get_available_examples()
+
+    def seed_hook(self, example_name: str) -> bool:
+        return self.hook_seeding_service.seed_hook(
+            example_name, target_project_root=self.project_root
         )
 
 
