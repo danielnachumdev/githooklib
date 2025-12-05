@@ -5,50 +5,10 @@ import traceback
 import logging
 from pathlib import Path
 
+from .constants import DELEGATOR_SCRIPT_TEMPLATE
 from .context import GitHookContext
 from .command import CommandExecutor
 from .logger import Logger
-
-
-DELEGATOR_SCRIPT_TEMPLATE = """#!/usr/bin/env python3
-
-import sys
-from pathlib import Path
-
-
-def find_project_root(module_name):
-    # Convert module name to file path (e.g., "githooks.pre_push" -> "githooks/pre_push.py")
-    module_path_parts = module_name.split(".")
-    module_file_path = Path(*module_path_parts).with_suffix(".py")
-    
-    current = Path(__file__).resolve()
-    for path in [current] + list(current.parents):
-        resolved_path = path.resolve()
-        # Check if the module file exists at this path and githooklib exists
-        module_file = resolved_path / module_file_path
-        if module_file.exists() and (resolved_path / "githooklib").exists():
-            return resolved_path
-    return None
-
-
-def main():
-    module_name = "{module_name}"
-    project_root = find_project_root(module_name)
-    if not project_root:
-        print("Error: Could not find project root containing " + module_name, file=sys.stderr)
-        module_file_path = "/".join(module_name.split(".")) + ".py"
-        print("Looked for module file: " + module_file_path, file=sys.stderr)
-        sys.exit(1)
-    sys.path.insert(0, str(project_root))
-    from {module_name} import {class_name}
-    hook = {class_name}()
-    exit_code = hook.run()
-    sys.exit(exit_code)
-
-
-if __name__ == "__main__":
-    main()
-"""
 
 
 @dataclass
@@ -67,40 +27,28 @@ class HookResult:
         return self.success
 
 
-class BaseHook(ABC):
-    _registered_hooks: list[type["BaseHook"]] = []
+class GitHook(ABC):
+    _registered_hooks: list[type["GitHook"]] = []
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
-        BaseHook._validate_hook_constructor(cls)
-        BaseHook._registered_hooks.append(cls)
-
-    @staticmethod
-    def _validate_hook_constructor(hook_class: type["BaseHook"]):
-        try:
-            instance = hook_class()
-            if not isinstance(instance, BaseHook):
-                raise TypeError(f"{hook_class.__name__} must be a subclass of BaseHook")
-        except TypeError as e:
-            if "required" in str(e).lower() or "missing" in str(e).lower():
-                raise TypeError(
-                    f"{hook_class.__name__} must have a constructor that can be called with no arguments. "
-                    f"Error: {e}"
-                ) from e
-            raise
-        except Exception as e:
-            raise TypeError(
-                f"{hook_class.__name__} constructor raised an error when called with no arguments: {e}"
-            ) from e
+        GitHook._registered_hooks.append(cls)
 
     @classmethod
-    def get_registered_hooks(cls) -> list[type["BaseHook"]]:
+    def get_registered_hooks(cls) -> list[type["GitHook"]]:
         return cls._registered_hooks.copy()
 
-    def __init__(self, hook_name: str, logger_prefix: Optional[str] = None, log_level: int = logging.INFO):
-        self.hook_name = hook_name
-        prefix = logger_prefix or f"[{hook_name}]"
-        self.logger = Logger(prefix=prefix, level=log_level)
+    @property
+    @abstractmethod
+    def hook_name(self) -> str: ...
+
+    @property
+    def log_level(self) -> int:
+        return logging.INFO
+
+    def __init__(self, log_level: Optional[int] = None) -> None:
+        effective_log_level = log_level if log_level is not None else self.log_level
+        self.logger = Logger(prefix=f"[{self.hook_name}]", level=effective_log_level)
         self.command_executor = CommandExecutor(logger=self.logger)
 
     def run(self) -> int:
@@ -177,18 +125,18 @@ class BaseHook(ABC):
         # Convert module name to file path (e.g., "githooks.pre_push" -> "githooks/pre_push.py")
         module_path_parts = module_name.split(".")
         module_file_path = Path(*module_path_parts).with_suffix(".py")
-        
+
         current = Path.cwd()
         searched_paths = []
         for path in [current] + list(current.parents):
             resolved_path = path.resolve()
             searched_paths.append(resolved_path)
-            
+
             # Check if the module file exists at this path and githooklib exists
             module_file = resolved_path / module_file_path
             if module_file.exists() and (resolved_path / "githooklib").exists():
                 return resolved_path
-        
+
         # If not found, show the full resolved path that was checked
         full_module_path = current.resolve() / module_file_path
         self.logger.error(
@@ -201,8 +149,7 @@ class BaseHook(ABC):
 
     def _generate_delegator_script(self, module_name: str, class_name: str) -> str:
         return DELEGATOR_SCRIPT_TEMPLATE.format(
-            module_name=module_name,
-            class_name=class_name
+            module_name=module_name, class_name=class_name
         )
 
     def _write_hook_script(self, hook_script_path: Path, script_content: str) -> bool:
@@ -224,5 +171,5 @@ class BaseHook(ABC):
 
 __all__ = [
     "HookResult",
-    "BaseHook"
+    "GitHook",
 ]

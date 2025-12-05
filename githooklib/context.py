@@ -42,7 +42,7 @@ class GitHookContext:
                 ["git", "rev-parse", "--git-dir"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             git_dir = Path(result.stdout.strip())
             return git_dir.parent.resolve()
@@ -56,7 +56,9 @@ class GitHookContext:
                 return path.resolve()
         return None
 
-    def get_stdin_line(self, index: int, default: Optional[str] = None) -> Optional[str]:
+    def get_stdin_line(
+        self, index: int, default: Optional[str] = None
+    ) -> Optional[str]:
         if 0 <= index < len(self.stdin_lines):
             return self.stdin_lines[index]
         return default
@@ -65,6 +67,4 @@ class GitHookContext:
         return len(self.stdin_lines) > 0
 
 
-__all__ = [
-    "GitHookContext"
-]
+__all__ = ["GitHookContext"]

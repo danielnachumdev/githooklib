@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Union
 
+from .logger import Logger
+
 
 @dataclass
 class CommandResult:
@@ -17,7 +19,7 @@ class CommandResult:
 
 
 class CommandExecutor:
-    def __init__(self, logger=None):
+    def __init__(self, logger: Optional[Logger] = None) -> None:
         self.logger = logger
 
     def run(
@@ -32,9 +34,13 @@ class CommandExecutor:
         cmd_list = self._normalize_command(command, shell)
         normalized_cwd = self._normalize_cwd(cwd)
         self._log_command(cmd_list)
-        return self._execute_command(cmd_list, normalized_cwd, capture_output, check, text, shell)
+        return self._execute_command(
+            cmd_list, normalized_cwd, capture_output, check, text, shell
+        )
 
-    def _normalize_command(self, command: Union[str, List[str]], shell: bool) -> List[str]:
+    def _normalize_command(
+        self, command: Union[str, List[str]], shell: bool
+    ) -> List[str]:
         if isinstance(command, str):
             return command.split() if not shell else [command]
         return command
@@ -46,7 +52,9 @@ class CommandExecutor:
 
     def _log_command(self, cmd_list: List[str]):
         if self.logger:
-            cmd_str = " ".join(cmd_list) if isinstance(cmd_list, list) else str(cmd_list)
+            cmd_str = (
+                " ".join(cmd_list) if isinstance(cmd_list, list) else str(cmd_list)
+            )
             self.logger.debug(f"Executing: {cmd_str}")
 
     def _execute_command(
@@ -59,7 +67,9 @@ class CommandExecutor:
         shell: bool,
     ) -> CommandResult:
         try:
-            return self._run_subprocess(cmd_list, cwd, capture_output, check, text, shell)
+            return self._run_subprocess(
+                cmd_list, cwd, capture_output, check, text, shell
+            )
         except subprocess.CalledProcessError as e:
             return self._create_error_result(e, cmd_list, capture_output)
         except FileNotFoundError:
@@ -127,7 +137,9 @@ class CommandExecutor:
             command=cmd_list,
         )
 
-    def _create_generic_error_result(self, error: Exception, cmd_list: List[str]) -> CommandResult:
+    def _create_generic_error_result(
+        self, error: Exception, cmd_list: List[str]
+    ) -> CommandResult:
         error_msg = f"Error executing command: {error}"
         if self.logger:
             self.logger.error(error_msg)
@@ -157,7 +169,4 @@ class CommandExecutor:
         )
 
 
-__all__ = [
-    "CommandResult",
-    "CommandExecutor"
-]
+__all__ = ["CommandResult", "CommandExecutor"]

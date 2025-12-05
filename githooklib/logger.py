@@ -1,9 +1,10 @@
 import logging
 import sys
+from typing import IO
 
 
 class StreamRouter(logging.Handler):
-    def __init__(self, stdout, stderr):
+    def __init__(self, stdout: IO, stderr: IO) -> None:
         super().__init__()
         self.stdout = stdout
         self.stderr = stderr
@@ -16,7 +17,7 @@ class StreamRouter(logging.Handler):
             self.handleError(record)
 
     def _format_message(self, record) -> str:
-        return self.format(record) + '\n'
+        return self.format(record) + "\n"
 
     def _write_to_stream(self, record, msg: str):
         if self._is_error_level(record):
@@ -37,7 +38,7 @@ class StreamRouter(logging.Handler):
 
 
 class Logger:
-    def __init__(self, prefix: str = "[git-hook]", level: int = logging.INFO):
+    def __init__(self, prefix: str = "[githooklib]", level: int = logging.INFO):
         self.prefix = prefix
         self.logger = logging.getLogger(prefix)
         if not self.logger.handlers:
@@ -45,12 +46,12 @@ class Logger:
         else:
             self.set_level(level)
 
-    def set_level(self, level: int):
+    def set_level(self, level: int) -> None:
         self.logger.setLevel(level)
         for handler in self.logger.handlers:
             handler.setLevel(level)
 
-    def _setup_handlers(self, level: int = logging.INFO):
+    def _setup_handlers(self, level: int = logging.INFO) -> None:
         handler = self._create_handler(level)
         self._configure_logger(handler, level)
 
@@ -66,10 +67,10 @@ class Logger:
         self.logger.setLevel(level)
         self.logger.propagate = False
 
-    def _create_formatter(self):
+    def _create_formatter(self) -> logging.Formatter:
         return logging.Formatter(
-            f'{self.prefix} [%(asctime)s] [%(levelname)s] %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            f"{self.prefix} [%(asctime)s] [%(levelname)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
     def log(self, message: str):
@@ -77,6 +78,9 @@ class Logger:
 
     def error(self, message: str):
         self.logger.error(message)
+
+    def info(self, message: str):
+        self.logger.info(" %s", message)
 
     def success(self, message: str):
         self.logger.info("✓ %s", message)
@@ -88,6 +92,4 @@ class Logger:
         self.logger.debug(message)
 
 
-__all__ = [
-    "Logger"
-]
+__all__ = ["Logger"]

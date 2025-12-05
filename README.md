@@ -4,7 +4,7 @@ A Python framework for creating, managing, and installing Git hooks with automat
 
 ## Features
 
-- **Easy Hook Creation**: Subclass `BaseHook` to create custom Git hooks with minimal boilerplate
+- **Easy Hook Creation**: Subclass `GitHook` to create custom Git hooks with minimal boilerplate
 - **Automatic Discovery**: Automatically finds hooks in your project from `githooks/` directory or `*_hook.py` files
 - **CLI Tools**: Command-line interface for listing, installing, uninstalling, and running hooks
 - **Built-in Utilities**: Includes logger, command executor, and Git context management
@@ -20,20 +20,21 @@ pip install githooklib
 
 ### 1. Create a Git Hook
 
-Create a hook by subclassing `BaseHook` in a `githooks/` directory:
+Create a hook by subclassing `GitHook` in a `githooks/` directory:
 
 ```python
 # githooks/pre_push.py
-from githooklib import BaseHook, HookResult, GitHookContext
+from githooklib import GitHook, HookResult, GitHookContext
 
-class PrePushHook(BaseHook):
+
+class PrePushHook(GitHook):
     def __init__(self):
         super().__init__(hook_name="pre-push")
-    
+
     def execute(self, context: GitHookContext) -> HookResult:
         # Your hook logic here
         self.logger.info("Running pre-push checks...")
-        
+
         # Example: Check if tests pass
         result = self.command_executor.run(["python", "-m", "pytest"])
         if not result.success:
@@ -42,7 +43,7 @@ class PrePushHook(BaseHook):
                 message="Tests failed. Push aborted.",
                 exit_code=1
             )
-        
+
         return HookResult(success=True, message="All checks passed!")
 ```
 
@@ -122,7 +123,7 @@ python -m githooklib --hook-paths custom_hooks other_hooks list
 ### Hook Structure
 
 All hooks must:
-1. Subclass `BaseHook`
+1. Subclass `GitHook`
 2. Call `super().__init__()` with a `hook_name` parameter
 3. Implement the `execute(context: GitHookContext) -> HookResult` method
 
@@ -132,18 +133,19 @@ Hooks are automatically discovered from:
 - Files in the `githooks/` directory (default)
 - Root-level files matching `*_hook.py` pattern (backward compatibility)
 
-The hook name is determined by the `hook_name` parameter passed to `BaseHook.__init__()`, not the filename.
+The hook name is determined by the `hook_name` parameter passed to `GitHook.__init__()`, not the filename.
 
 ### Example: Pre-commit Hook
 
 ```python
 # githooks/pre_commit.py
-from githooklib import BaseHook, HookResult, GitHookContext
+from githooklib import GitHook, HookResult, GitHookContext
 
-class PreCommitHook(BaseHook):
+
+class PreCommitHook(GitHook):
     def __init__(self):
         super().__init__(hook_name="pre-commit")
-    
+
     def execute(self, context: GitHookContext) -> HookResult:
         # Run linter
         lint_result = self.command_executor.run(["flake8", "."])
@@ -153,7 +155,7 @@ class PreCommitHook(BaseHook):
                 message="Linting failed. Commit aborted.",
                 exit_code=1
             )
-        
+
         # Run formatter check
         format_result = self.command_executor.run(["black", "--check", "."])
         if not format_result.success:
@@ -162,7 +164,7 @@ class PreCommitHook(BaseHook):
                 message="Code formatting check failed. Run 'black .' to fix.",
                 exit_code=1
             )
-        
+
         self.logger.success("All pre-commit checks passed!")
         return HookResult(success=True)
 ```
@@ -171,23 +173,24 @@ class PreCommitHook(BaseHook):
 
 ```python
 # githooks/commit_msg.py
-from githooklib import BaseHook, HookResult, GitHookContext
+from githooklib import GitHook, HookResult, GitHookContext
 
-class CommitMsgHook(BaseHook):
+
+class CommitMsgHook(GitHook):
     def __init__(self):
         super().__init__(hook_name="commit-msg")
-    
+
     def execute(self, context: GitHookContext) -> HookResult:
         # Get commit message from stdin (first line)
         commit_msg = context.get_stdin_line(0, "")
-        
+
         if not commit_msg:
             return HookResult(
                 success=False,
                 message="Empty commit message",
                 exit_code=1
             )
-        
+
         # Enforce commit message format (e.g., must start with issue number)
         if not commit_msg.startswith("#"):
             return HookResult(
@@ -195,13 +198,13 @@ class CommitMsgHook(BaseHook):
                 message="Commit message must start with issue number (e.g., '#123: ...')",
                 exit_code=1
             )
-        
+
         return HookResult(success=True)
 ```
 
 ## API Reference
 
-### BaseHook
+### GitHook
 
 The base class for all Git hooks.
 

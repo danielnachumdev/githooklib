@@ -1,6 +1,20 @@
-from quickpub import publish, Version, MypyRunner, PylintRunner, UnittestRunner, PypircEnforcer, LocalVersionEnforcer, \
-    ReadmeEnforcer, PypiRemoteVersionEnforcer, LicenseEnforcer, GithubUploadTarget, PypircUploadTarget, \
-    SetuptoolsBuildSchema, CondaPythonProvider, DefaultPythonProvider
+from quickpub import (
+    publish,
+    Version,
+    MypyRunner,
+    PylintRunner,
+    UnittestRunner,
+    PypircEnforcer,
+    LocalVersionEnforcer,
+    ReadmeEnforcer,
+    PypiRemoteVersionEnforcer,
+    LicenseEnforcer,
+    GithubUploadTarget,
+    PypircUploadTarget,
+    SetuptoolsBuildSchema,
+    CondaPythonProvider,
+    DefaultPythonProvider,
+)
 from tqdm import tqdm
 
 
@@ -12,11 +26,14 @@ def main() -> None:
         author_email="danielnachumdev@gmail.com",
         description="A Python framework for creating, managing, and installing Git hooks with automatic discovery and CLI tools.",
         min_python=Version(3, 8, 0),
-        dependencies=[],
+        dependencies=["fire"],
         homepage="https://github.com/danielnachumdev/githooklib",
         enforcers=[
-            PypircEnforcer(), ReadmeEnforcer(), LicenseEnforcer(),
+            PypircEnforcer(),
+            ReadmeEnforcer(),
+            LicenseEnforcer(),
             LocalVersionEnforcer(),
+            PypiRemoteVersionEnforcer(),
         ],
         build_schemas=[SetuptoolsBuildSchema()],
         upload_targets=[PypircUploadTarget(), GithubUploadTarget()],

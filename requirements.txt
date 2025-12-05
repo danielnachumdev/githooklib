@@ -1,3 +1,5 @@
 quickpub
 tqdm
 setuptools
+fire
+black
