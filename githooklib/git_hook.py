@@ -48,7 +48,8 @@ class GitHook(ABC):
 
     def __init__(self, log_level: Optional[int] = None) -> None:
         effective_log_level = log_level if log_level is not None else self.log_level
-        self.logger = Logger(prefix=f"[{self.hook_name}]", level=effective_log_level)
+        self.logger = Logger(
+            prefix=f"[{self.hook_name}]", level=effective_log_level)
         self.command_executor = CommandExecutor(logger=self.logger)
 
     def run(self) -> int:
@@ -75,10 +76,12 @@ class GitHook(ABC):
         module_name, class_name = self._get_module_and_class()
         project_root = self._find_project_root(module_name)
         if not project_root:
-            self.logger.error(f"Could not find project root containing {module_name}")
+            self.logger.error(
+                f"Could not find project root containing {module_name}")
             return False
         hook_script_path = hooks_dir / self.hook_name
-        script_content = self._generate_delegator_script(module_name, class_name)
+        script_content = self._generate_delegator_script(
+            module_name, class_name)
         return self._write_hook_script(hook_script_path, script_content)
 
     def _validate_installation_prerequisites(self) -> Optional[Path]:
@@ -122,22 +125,31 @@ class GitHook(ABC):
         return module_name, class_name
 
     def _find_project_root(self, module_name: str) -> Optional[Path]:
-        # Convert module name to file path (e.g., "githooks.pre_push" -> "githooks/pre_push.py")
-        module_path_parts = module_name.split(".")
-        module_file_path = Path(*module_path_parts).with_suffix(".py")
-
+        module_file_path = self._convert_module_name_to_file_path(module_name)
         current = Path.cwd()
         searched_paths = []
+
         for path in [current] + list(current.parents):
             resolved_path = path.resolve()
             searched_paths.append(resolved_path)
-
-            # Check if the module file exists at this path and githooklib exists
-            module_file = resolved_path / module_file_path
-            if module_file.exists() and (resolved_path / "githooklib").exists():
+            if self._is_valid_project_root(resolved_path, module_file_path):
                 return resolved_path
 
-        # If not found, show the full resolved path that was checked
+        self._log_project_root_not_found(
+            module_name, module_file_path, current, searched_paths)
+        return None
+
+    def _convert_module_name_to_file_path(self, module_name: str) -> Path:
+        module_path_parts = module_name.split(".")
+        return Path(*module_path_parts).with_suffix(".py")
+
+    def _is_valid_project_root(self, path: Path, module_file_path: Path) -> bool:
+        module_file = path / module_file_path
+        return module_file.exists() and (path / "githooklib").exists()
+
+    def _log_project_root_not_found(
+        self, module_name: str, module_file_path: Path, current: Path, searched_paths: list[Path]
+    ):
         full_module_path = current.resolve() / module_file_path
         self.logger.error(
             f"Could not find project root containing {module_name}. "
@@ -145,7 +157,6 @@ class GitHook(ABC):
             f"(resolved from CWD: {current.resolve()}). "
             f"Searched in directories: {', '.join(str(p) for p in searched_paths)}"
         )
-        return None
 
     def _generate_delegator_script(self, module_name: str, class_name: str) -> str:
         return DELEGATOR_SCRIPT_TEMPLATE.format(

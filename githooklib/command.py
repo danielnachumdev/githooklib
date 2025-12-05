@@ -52,9 +52,7 @@ class CommandExecutor:
 
     def _log_command(self, cmd_list: List[str]):
         if self.logger:
-            cmd_str = (
-                " ".join(cmd_list) if isinstance(cmd_list, list) else str(cmd_list)
-            )
+            cmd_str = " ".join(cmd_list)
             self.logger.debug(f"Executing: {cmd_str}")
 
     def _execute_command(
@@ -125,7 +123,7 @@ class CommandExecutor:
         )
 
     def _create_not_found_result(self, cmd_list: List[str]) -> CommandResult:
-        command_name = cmd_list[0] if isinstance(cmd_list, list) else str(cmd_list)
+        command_name = cmd_list[0]
         error_msg = f"Command not found: {command_name}"
         if self.logger:
             self.logger.error(error_msg)
@@ -159,13 +157,12 @@ class CommandExecutor:
         stderr: str,
         command: List[str],
     ) -> CommandResult:
-        normalized_command = command if isinstance(command, list) else [str(command)]
         return CommandResult(
             success=success,
             exit_code=exit_code,
             stdout=stdout,
             stderr=stderr,
-            command=normalized_command,
+            command=command,
         )
 
 

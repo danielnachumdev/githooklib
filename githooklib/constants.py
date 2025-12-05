@@ -5,14 +5,12 @@ from pathlib import Path
 
 
 def find_project_root(module_name):
-    # Convert module name to file path (e.g., "githooks.pre_push" -> "githooks/pre_push.py")
     module_path_parts = module_name.split(".")
     module_file_path = Path(*module_path_parts).with_suffix(".py")
     
     current = Path(__file__).resolve()
     for path in [current] + list(current.parents):
         resolved_path = path.resolve()
-        # Check if the module file exists at this path and githooklib exists
         module_file = resolved_path / module_file_path
         if module_file.exists() and (resolved_path / "githooklib").exists():
             return resolved_path
