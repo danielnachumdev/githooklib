@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "githooklib"
+version = "0.0.1"
+authors = [
+    { name = "danielnachumdev", email = "danielnachumdev@gmail.com" },
+]
+dependencies = []
+keywords = []
+license = { "file" = "./LICENSE" }
+description = "A Python framework for creating, managing, and installing Git hooks with automatic discovery and CLI tools."
+readme = {file = "./README.md", content-type = "text/markdown"}
+requires-python = ">=3.8.0"
+classifiers = [
+	"Development Status :: 3 - Alpha",
+	"Intended Audience :: Developers",
+	"Programming Language :: Python :: 3",
+	"Operating System :: Microsoft :: Windows"
+]
+
+[tool.setuptools]
+packages = ["githooklib"]
+[tool.setuptools.package-data]
+"githooklib" = ["py.typed"]
+
+[project.urls]
+"Homepage" = "https://github.com/danielnachumdev/githooklib"
+"Bug Tracker" = "https://github.com/danielnachumdev/githooklib/issues"

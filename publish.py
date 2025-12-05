@@ -16,7 +16,7 @@ def main() -> None:
         homepage="https://github.com/danielnachumdev/githooklib",
         enforcers=[
             PypircEnforcer(), ReadmeEnforcer(), LicenseEnforcer(),
-            LocalVersionEnforcer(), PypiRemoteVersionEnforcer()
+            LocalVersionEnforcer(),
         ],
         build_schemas=[SetuptoolsBuildSchema()],
         upload_targets=[PypircUploadTarget(), GithubUploadTarget()],
