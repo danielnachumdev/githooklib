@@ -1,0 +1,11 @@
+[pycodestyle]
+max-line-length=120
+[pylint]
+ignore=tests/**.py,tmp/**
+good-names=foo,bar
+good-names-rgx=^[a-zA-Z]
+[pylint.naming]
+class-rgx = ^(_)?[A-Z][a-zA-Z0-9]*$
+module-rgx=^[a-zA-Z][a-zA-Z0-9_]*$
+[pylint.messages_control]
+disable=W0211,C0114,E1120,E0611,W0702,W0612,R0913,R0913,C0415,R0912,R0903,R0914,R0911,R1716,W0401,R0801
