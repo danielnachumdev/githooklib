@@ -11,13 +11,13 @@ class CLI:
         project_root: Optional[Path] = None,
         hook_search_paths: Optional[list[str]] = None,
     ):
-        self.api = API(
-            project_root=project_root, hook_search_paths=hook_search_paths
-        )
+        self._api = API(project_root=project_root,
+                        hook_search_paths=hook_search_paths)
 
     def list(self) -> None:
+        """List all available hooks in the project."""
         try:
-            hook_names = self.api.list_hooks()
+            hook_names = self._api.list_hooks()
         except ValueError as e:
             self._print_error(str(e))
             return
@@ -31,10 +31,11 @@ class CLI:
             print(f"  - {hook_name}")
 
     def show(self) -> None:
-        installed_hooks = self.api.get_installed_hooks()
+        """Show all installed git hooks and their installation source."""
+        installed_hooks = self._api.get_installed_hooks()
 
         if not installed_hooks:
-            git_root = self.api.get_git_root()
+            git_root = self._api.get_git_root()
             if not git_root:
                 print("Not in a git repository", file=sys.stderr)
             else:
@@ -51,38 +52,63 @@ class CLI:
             print(f"  - {hook_name} ({source})")
 
     def run(self, hook_name: str, debug: bool = False) -> int:
+        """Run a hook manually for testing purposes.
+
+        Args:
+            hook_name: Name of the hook to run
+            debug: Enable debug logging
+
+        Returns:
+            Exit code (0 for success, 1 for failure)
+        """
         try:
             if not self._validate_hook_exists(hook_name):
                 return 1
-            return self.api.run_hook(hook_name, debug=debug)
+            return self._api.run_hook(hook_name, debug=debug)
         except ValueError as e:
             self._print_error(str(e))
             return 1
 
     def install(self, hook_name: str) -> int:
+        """Install a hook to .git/hooks/.
+
+        Args:
+            hook_name: Name of the hook to install
+
+        Returns:
+            Exit code (0 for success, 1 for failure)
+        """
         try:
             if not self._validate_hook_exists(hook_name):
                 return 1
-            success = self.api.install_hook(hook_name)
+            success = self._api.install_hook(hook_name)
             return 0 if success else 1
         except ValueError as e:
             self._print_error(str(e))
             return 1
 
     def uninstall(self, hook_name: str) -> int:
+        """Uninstall a hook from .git/hooks/.
+
+        Args:
+            hook_name: Name of the hook to uninstall
+
+        Returns:
+            Exit code (0 for success, 1 for failure)
+        """
         try:
             if not self._validate_hook_exists(hook_name):
                 return 1
-            success = self.api.uninstall_hook(hook_name)
+            success = self._api.uninstall_hook(hook_name)
             return 0 if success else 1
         except ValueError as e:
             self._print_error(str(e))
             return 1
 
     def _validate_hook_exists(self, hook_name: str) -> bool:
-        hooks = self.api.discover_hooks()
+        hooks = self._api.discover_hooks()
         if hook_name not in hooks:
-            error_msg = self.api.get_hook_not_found_error_message(hook_name)
+            error_msg = self._api.get_hook_not_found_error_message(hook_name)
             self._print_error(error_msg)
             return False
         return True
@@ -90,8 +116,56 @@ class CLI:
     def _print_error(self, message: str) -> None:
         print(f"Error: {message}", file=sys.stderr)
 
-    def set_hook_paths(self, *hook_paths: str) -> None:
-        self.api.set_hook_paths(*hook_paths)
+    def seed(self, example_name: Optional[str] = None) -> int:
+        """Seed an example hook from the examples folder to githooks/.
+
+        If no example_name is provided, lists all available examples.
+
+        Args:
+            example_name: Name of the example to seed (filename without .py extension)
+
+        Returns:
+            Exit code (0 for success, 1 for failure)
+        """
+        if example_name is None:
+            available_examples = self._api.get_available_examples()
+            if not available_examples:
+                print("No example hooks available")
+                return 1
+            print("Available example hooks:")
+            for example in available_examples:
+                print(f"  - {example}")
+            return 0
+
+        try:
+            success = self._api.seed_hook(example_name)
+            if not success:
+                available_examples = self._api.get_available_examples()
+                if example_name not in available_examples:
+                    self._print_error(
+                        f"Example '{example_name}' not found. "
+                        f"Available examples: {', '.join(available_examples)}"
+                    )
+                else:
+                    target_file = (
+                            self._api.project_root /
+                        "githooks" / f"{example_name}.py"
+                    )
+                    if target_file.exists():
+                        self._print_error(
+                            f"Example '{example_name}' already exists at {target_file}"
+                        )
+                    else:
+                        self._print_error(
+                            f"Failed to seed example '{example_name}'. "
+                            "Project root not found."
+                        )
+                return 1
+            print(f"Successfully seeded example '{example_name}' to githooks/")
+            return 0
+        except Exception as e:
+            self._print_error(f"Error seeding example: {e}")
+            return 1
 
 
 __all__ = ["CLI"]
