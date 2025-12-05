@@ -3,9 +3,7 @@ from githooklib.command import CommandExecutor
 from githooklib import HookResult
 
 
-def _check_mypy_exists(
-    logger: Logger, command_executor: CommandExecutor
-) -> bool:
+def _check_mypy_exists(logger: Logger, command_executor: CommandExecutor) -> bool:
     check_result = command_executor.run(["python", "-m", "mypy", "--version"])
     if check_result.exit_code == 127:
         return False

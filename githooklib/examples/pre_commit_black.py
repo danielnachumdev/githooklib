@@ -3,9 +3,7 @@ from githooklib.logger import Logger
 from githooklib.command import CommandExecutor
 
 
-def _check_black_exists(
-    logger: Logger, command_executor: CommandExecutor
-) -> bool:
+def _check_black_exists(logger: Logger, command_executor: CommandExecutor) -> bool:
     check_result = command_executor.run(["python", "-m", "black", "--version"])
     if check_result.exit_code == 127:
         return False

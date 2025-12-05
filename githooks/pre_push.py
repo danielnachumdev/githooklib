@@ -9,9 +9,7 @@ class PrePush(GitHook):
         return "pre-push"
 
     def execute(self, context: GitHookContext) -> HookResult:
-        format_result = format_project_with_black(
-            self.logger, self.command_executor
-        )
+        format_result = format_project_with_black(self.logger, self.command_executor)
         if not format_result.success:
             return format_result
 
