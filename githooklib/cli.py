@@ -1,9 +1,8 @@
 import sys
-import fire
 from pathlib import Path
 from typing import Optional
 
-from .api import HookAPI
+from .api import API
 
 
 class CLI:
@@ -12,7 +11,7 @@ class CLI:
         project_root: Optional[Path] = None,
         hook_search_paths: Optional[list[str]] = None,
     ):
-        self.api = HookAPI(
+        self.api = API(
             project_root=project_root, hook_search_paths=hook_search_paths
         )
 
@@ -94,16 +93,5 @@ class CLI:
     def set_hook_paths(self, *hook_paths: str) -> None:
         self.api.set_hook_paths(*hook_paths)
 
-
-def main() -> None:
-    cli = CLI()
-    exit_code = fire.Fire(cli)
-    if isinstance(exit_code, int):
-        sys.exit(exit_code)
-    sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()
 
 __all__ = ["CLI"]
