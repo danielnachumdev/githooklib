@@ -27,7 +27,9 @@ class ModuleImportGateway:
         if str(directory) not in sys.path:
             sys.path.insert(0, str(directory))
 
-    def find_module_file(self, module_name: str, project_root: Path | None) -> str | None:
+    def find_module_file(
+        self, module_name: str, project_root: Path | None
+    ) -> str | None:
         try:
             import importlib.util
 

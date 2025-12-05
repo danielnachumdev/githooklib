@@ -22,14 +22,16 @@ class HookSeedingService:
             return []
 
         example_files = [
-            f.stem
-            for f in examples_path.glob("*.py")
-            if f.name != "__init__.py"
+            f.stem for f in examples_path.glob("*.py") if f.name != "__init__.py"
         ]
         return sorted(example_files)
 
-    def seed_hook(self, example_name: str, target_project_root: Optional[Path] = None) -> bool:
-        project_root = target_project_root or self.project_root_gateway.find_project_root()
+    def seed_hook(
+        self, example_name: str, target_project_root: Optional[Path] = None
+    ) -> bool:
+        project_root = (
+            target_project_root or self.project_root_gateway.find_project_root()
+        )
         if not project_root:
             return False
 

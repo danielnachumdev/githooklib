@@ -32,8 +32,7 @@ class HookDiscoveryService:
         hook_classes_by_name = self._collect_hook_classes_by_name()
         self._validate_no_duplicate_hooks(hook_classes_by_name)
 
-        hooks = {name: classes[0]
-                 for name, classes in hook_classes_by_name.items()}
+        hooks = {name: classes[0] for name, classes in hook_classes_by_name.items()}
         self._hooks = hooks
         return hooks
 
@@ -109,8 +108,6 @@ class HookDiscoveryService:
                 if module_file:
                     error_lines.append(f"    - {class_name} in {module_file}")
                 else:
-                    error_lines.append(
-                        f"    - {class_name} in module '{module_name}'"
-                    )
+                    error_lines.append(f"    - {class_name} in module '{module_name}'")
         error_message = "\n".join(error_lines)
         raise ValueError(error_message)

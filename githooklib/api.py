@@ -38,8 +38,7 @@ class API:
         self.hook_management_service = HookManagementService(
             self.hook_discovery_service
         )
-        self.error_message_service = ErrorMessageService(
-            self.hook_discovery_service)
+        self.error_message_service = ErrorMessageService(self.hook_discovery_service)
         self.hook_seeding_service = HookSeedingService(project_root_gateway)
         self.git_repository_gateway = git_repository_gateway
 

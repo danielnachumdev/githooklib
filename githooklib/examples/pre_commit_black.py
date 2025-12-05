@@ -22,4 +22,3 @@ class PreCommit(GitHook):
 
         self.logger.success("Code reformatted successfully!")
         return HookResult(success=True, message="Pre-commit checks passed!")
-

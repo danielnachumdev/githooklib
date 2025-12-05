@@ -48,8 +48,7 @@ class GitHook(ABC):
 
     def __init__(self, log_level: Optional[int] = None) -> None:
         effective_log_level = log_level if log_level is not None else self.log_level
-        self.logger = Logger(
-            prefix=f"[{self.hook_name}]", level=effective_log_level)
+        self.logger = Logger(prefix=f"[{self.hook_name}]", level=effective_log_level)
         self.command_executor = CommandExecutor(logger=self.logger)
 
     def run(self) -> int:
@@ -76,12 +75,10 @@ class GitHook(ABC):
         module_name, class_name = self._get_module_and_class()
         project_root = self._find_project_root(module_name)
         if not project_root:
-            self.logger.error(
-                f"Could not find project root containing {module_name}")
+            self.logger.error(f"Could not find project root containing {module_name}")
             return False
         hook_script_path = hooks_dir / self.hook_name
-        script_content = self._generate_delegator_script(
-            module_name, class_name)
+        script_content = self._generate_delegator_script(module_name, class_name)
         return self._write_hook_script(hook_script_path, script_content)
 
     def _validate_installation_prerequisites(self) -> Optional[Path]:
@@ -136,7 +133,8 @@ class GitHook(ABC):
                 return resolved_path
 
         self._log_project_root_not_found(
-            module_name, module_file_path, current, searched_paths)
+            module_name, module_file_path, current, searched_paths
+        )
         return None
 
     def _convert_module_name_to_file_path(self, module_name: str) -> Path:
@@ -148,7 +146,11 @@ class GitHook(ABC):
         return module_file.exists() and (path / "githooklib").exists()
 
     def _log_project_root_not_found(
-        self, module_name: str, module_file_path: Path, current: Path, searched_paths: list[Path]
+        self,
+        module_name: str,
+        module_file_path: Path,
+        current: Path,
+        searched_paths: list[Path],
     ):
         full_module_path = current.resolve() / module_file_path
         self.logger.error(

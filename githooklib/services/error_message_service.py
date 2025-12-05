@@ -27,9 +27,7 @@ class ErrorMessageService:
                 f"  - {project_root} (found {len(root_hooks)} *_hook.py files)"
             )
         else:
-            error_lines.append(
-                f"  - {project_root} (no *_hook.py files found)"
-            )
+            error_lines.append(f"  - {project_root} (no *_hook.py files found)")
 
     def _add_hook_search_paths_info(self, error_lines: list[str]) -> None:
         cwd = Path.cwd()
@@ -48,12 +46,8 @@ class ErrorMessageService:
             error_lines.append(f"  - {search_dir} (directory does not exist)")
             return
 
-        py_files = [
-            f for f in search_dir.glob("*.py") if f.name != "__init__.py"
-        ]
+        py_files = [f for f in search_dir.glob("*.py") if f.name != "__init__.py"]
         if py_files:
-            error_lines.append(
-                f"  - {search_dir} (found {len(py_files)} .py files)"
-            )
+            error_lines.append(f"  - {search_dir} (found {len(py_files)} .py files)")
         else:
             error_lines.append(f"  - {search_dir} (no .py files found)")

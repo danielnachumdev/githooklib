@@ -46,7 +46,7 @@ def main() -> None:
         ],
         scripts={"githooklib": entry_point},
         pbar=tqdm(desc="QA", leave=False),  # type: ignore
-        demo=True
+        demo=True,
     )
 
 

@@ -11,8 +11,7 @@ class CLI:
         project_root: Optional[Path] = None,
         hook_search_paths: Optional[list[str]] = None,
     ):
-        self._api = API(project_root=project_root,
-                        hook_search_paths=hook_search_paths)
+        self._api = API(project_root=project_root, hook_search_paths=hook_search_paths)
 
     def list(self) -> None:
         """List all available hooks in the project."""
@@ -148,8 +147,7 @@ class CLI:
                     )
                 else:
                     target_file = (
-                            self._api.project_root /
-                        "githooks" / f"{example_name}.py"
+                        self._api.project_root / "githooks" / f"{example_name}.py"
                     )
                     if target_file.exists():
                         self._print_error(
