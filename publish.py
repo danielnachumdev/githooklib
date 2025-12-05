@@ -16,6 +16,7 @@ from quickpub import (
     DefaultPythonProvider,
 )
 from tqdm import tqdm
+from githooklib.__main__ import main as entry_point
 
 
 def main() -> None:
@@ -43,7 +44,9 @@ def main() -> None:
             # PylintRunner(bound=">=0.8", configuration_path="./.pylintrc"),
             # UnittestRunner(bound=">=0.8"),
         ],
+        scripts={"githooklib": entry_point},
         pbar=tqdm(desc="QA", leave=False),  # type: ignore
+        demo=True
     )
 
 
