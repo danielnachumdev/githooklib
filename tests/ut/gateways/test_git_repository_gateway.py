@@ -6,9 +6,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from githooklib.gateways.git_repository_gateway import GitRepositoryGateway
+from ..base_test_case import BaseTestCase
 
 
-class TestGitRepositoryGateway(unittest.TestCase):
+class TestGitRepositoryGateway(BaseTestCase):
     def setUp(self):
         self.gateway = GitRepositoryGateway()
 
@@ -27,7 +28,7 @@ class TestGitRepositoryGateway(unittest.TestCase):
 
     def test_find_git_root_via_command_ends_with_githooklib(self):
         result = GitRepositoryGateway._find_git_root_via_command()
-        self.assertIsNotNone(result)
+        result = self.unwrap_optional(result)
         self.assertEqual(result.name, "githooklib")
         self.assertTrue((result / ".git").exists())
 
@@ -43,12 +44,13 @@ class TestGitRepositoryGateway(unittest.TestCase):
 
     def test_find_git_root_via_filesystem_ends_with_githooklib(self):
         result = GitRepositoryGateway._find_git_root_via_filesystem()
-        self.assertIsNotNone(result)
+        result = self.unwrap_optional(result)
         self.assertEqual(result.name, "githooklib")
         self.assertTrue((result / ".git").exists())
 
     def test_find_git_root_via_filesystem_found_in_parent(self):
         git_root = GitRepositoryGateway.find_git_root()
+        git_root = self.unwrap_optional(git_root)
         original_cwd = os.getcwd()
         try:
             subdir = git_root / "tests" / "ut" / "gateways"
@@ -61,7 +63,7 @@ class TestGitRepositoryGateway(unittest.TestCase):
 
     def test_find_git_root_ends_with_githooklib(self):
         result = GitRepositoryGateway.find_git_root()
-        self.assertIsNotNone(result)
+        result = self.unwrap_optional(result)
         self.assertEqual(result.name, "githooklib")
         self.assertTrue((result / ".git").exists())
 
