@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 
 class GitRepositoryGateway:
@@ -33,7 +33,7 @@ class GitRepositoryGateway:
                 return path.resolve()
         return None
 
-    def get_installed_hooks(self, hooks_dir: Path) -> dict[str, bool]:
+    def get_installed_hooks(self, hooks_dir: Path) -> Dict[str, bool]:
         installed = {}
         for hook_file in hooks_dir.iterdir():
             if hook_file.is_file() and not hook_file.name.endswith(".sample"):

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List, Type, Tuple
 import traceback
 import logging
 from pathlib import Path
@@ -31,7 +31,7 @@ class HookResult:
 
 
 class GitHook(ABC):
-    _registered_hooks: list[type["GitHook"]] = []
+    _registered_hooks: List[Type["GitHook"]] = []
 
     @staticmethod
     def _write_script_file(hook_script_path: Path, script_content: str) -> None:
@@ -53,11 +53,11 @@ class GitHook(ABC):
         GitHook._registered_hooks.append(cls)
 
     @classmethod
-    def get_registered_hooks(cls) -> list[type["GitHook"]]:
+    def get_registered_hooks(cls) -> List[Type["GitHook"]]:
         return cls._registered_hooks.copy()
 
     @classmethod
-    def _get_module_and_class(cls) -> tuple[str, str]:
+    def _get_module_and_class(cls) -> Tuple[str, str]:
         module_name = cls.__module__
         class_name = cls.__name__
         return module_name, class_name
