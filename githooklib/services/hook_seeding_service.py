@@ -51,3 +51,6 @@ class HookSeedingService:
 
         shutil.copy2(source_file, target_file)
         return True
+
+
+__all__ = ["HookSeedingService"]

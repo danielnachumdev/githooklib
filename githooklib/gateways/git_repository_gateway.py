@@ -25,3 +25,6 @@ class GitRepositoryGateway:
             return "githooklib" in content and "find_project_root" in content
         except (OSError, IOError, UnicodeDecodeError):
             return False
+
+
+__all__ = ["GitRepositoryGateway"]

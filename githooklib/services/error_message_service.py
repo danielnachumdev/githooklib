@@ -51,3 +51,6 @@ class ErrorMessageService:
             error_lines.append(f"  - {search_dir} (found {len(py_files)} .py files)")
         else:
             error_lines.append(f"  - {search_dir} (no .py files found)")
+
+
+__all__ = ["ErrorMessageService"]

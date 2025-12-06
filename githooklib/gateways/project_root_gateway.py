@@ -9,3 +9,6 @@ class ProjectRootGateway:
             if (path / "githooklib").exists():
                 return path.resolve()
         return None
+
+
+__all__ = ["ProjectRootGateway"]

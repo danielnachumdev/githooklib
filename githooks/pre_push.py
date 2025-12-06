@@ -13,3 +13,6 @@ class PrePush(GitHook):
             return mypy_result
 
         return HookResult(success=True, message="All checks passed!")
+
+
+__all__ = ["PrePush"]

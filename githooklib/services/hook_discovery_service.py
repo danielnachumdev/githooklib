@@ -111,3 +111,6 @@ class HookDiscoveryService:
                     error_lines.append(f"    - {class_name} in module '{module_name}'")
         error_message = "\n".join(error_lines)
         raise ValueError(error_message)
+
+
+__all__ = ["HookDiscoveryService"]

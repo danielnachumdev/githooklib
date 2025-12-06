@@ -35,3 +35,6 @@ class HookManagementService:
         log_level = logging.DEBUG if debug else logging.INFO
         hook = hook_class(log_level=log_level)
         return hook.run()
+
+
+__all__ = ["HookManagementService"]
