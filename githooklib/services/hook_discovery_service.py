@@ -70,7 +70,8 @@ class HookDiscoveryService:
         for module_path in hook_modules:
             self.module_import_gateway.import_module(module_path, base_dir)
 
-    def _collect_hook_classes_by_name(self) -> dict[str, list[type[GitHook]]]:
+    @staticmethod
+    def _collect_hook_classes_by_name() -> dict[str, list[type[GitHook]]]:
         hook_classes_by_name: dict[str, list[type[GitHook]]] = {}
         for hook_class in GitHook.get_registered_hooks():
             instance = hook_class()

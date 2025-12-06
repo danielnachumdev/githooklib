@@ -28,8 +28,9 @@ class ModuleImportGateway:
         if str(directory) not in sys.path:
             sys.path.insert(0, str(directory))
 
+    @staticmethod
     def find_module_file(
-        self, module_name: str, project_root: Optional[Path]
+        module_name: str, project_root: Optional[Path]
     ) -> Optional[str]:
         try:
             import importlib.util
@@ -47,6 +48,16 @@ class ModuleImportGateway:
         except (ImportError, AttributeError, ValueError):
             pass
         return None
+
+    @staticmethod
+    def convert_module_name_to_file_path(module_name: str) -> Path:
+        module_path_parts = module_name.split(".")
+        return Path(*module_path_parts).with_suffix(".py")
+
+    @staticmethod
+    def is_valid_project_root(path: Path, module_file_path: Path) -> bool:
+        module_file = path / module_file_path
+        return module_file.exists() and (path / "githooklib").exists()
 
 
 __all__ = ["ModuleImportGateway"]

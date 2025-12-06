@@ -9,6 +9,8 @@ from .constants import DELEGATOR_SCRIPT_TEMPLATE, EXIT_SUCCESS, EXIT_FAILURE
 from .context import GitHookContext
 from .command import CommandExecutor
 from .logger import Logger
+from .gateways.git_repository_gateway import GitRepositoryGateway
+from .gateways.module_import_gateway import ModuleImportGateway
 
 
 @dataclass
@@ -30,6 +32,21 @@ class HookResult:
 class GitHook(ABC):
     _registered_hooks: list[type["GitHook"]] = []
 
+    @staticmethod
+    def _write_script_file(hook_script_path: Path, script_content: str) -> None:
+        hook_script_path.write_text(script_content)
+
+    @staticmethod
+    def _make_script_executable(hook_script_path: Path) -> None:
+        hook_script_path.chmod(0o755)
+
+    @staticmethod
+    def _generate_delegator_script(module_name: str, class_name: str) -> str:
+        return DELEGATOR_SCRIPT_TEMPLATE.format(
+            module_name=module_name, class_name=class_name
+        )
+
+    @classmethod
     def __init_subclass__(cls, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
         GitHook._registered_hooks.append(cls)
@@ -38,18 +55,27 @@ class GitHook(ABC):
     def get_registered_hooks(cls) -> list[type["GitHook"]]:
         return cls._registered_hooks.copy()
 
+    @classmethod
+    def _get_module_and_class(cls) -> tuple[str, str]:
+        module_name = cls.__module__
+        class_name = cls.__name__
+        return module_name, class_name
+
     @property
     @abstractmethod
     def hook_name(self) -> str: ...
 
-    @property
-    def log_level(self) -> int:
-        return logging.INFO
+    @abstractmethod
+    def execute(self, context: GitHookContext) -> HookResult: ...
 
     def __init__(self, log_level: Optional[int] = None) -> None:
         effective_log_level = log_level if log_level is not None else self.log_level
         self.logger = Logger(prefix=f"[{self.hook_name}]", level=effective_log_level)
         self.command_executor = CommandExecutor(logger=self.logger)
+
+    @property
+    def log_level(self) -> int:
+        return logging.INFO
 
     def run(self) -> int:
         try:
@@ -63,10 +89,6 @@ class GitHook(ABC):
     def _handle_error(self, error: Exception) -> None:
         self.logger.error(f"Unexpected error in hook: {error}")
         self.logger.error(traceback.format_exc())
-
-    @abstractmethod
-    def execute(self, context: GitHookContext) -> HookResult:
-        pass
 
     def install(self) -> bool:
         hooks_dir = self._validate_installation_prerequisites()
@@ -82,7 +104,7 @@ class GitHook(ABC):
         return self._write_hook_delegation_script(hook_script_path, script_content)
 
     def _validate_installation_prerequisites(self) -> Optional[Path]:
-        git_root = self._find_git_root()
+        git_root = GitRepositoryGateway.find_git_root()
         if not git_root:
             self.logger.error("Not a git repository")
             return None
@@ -93,7 +115,7 @@ class GitHook(ABC):
         return hooks_dir
 
     def uninstall(self) -> bool:
-        git_root = self._find_git_root()
+        git_root = GitRepositoryGateway.find_git_root()
         if not git_root:
             self.logger.error("Not a git repository")
             return False
@@ -109,41 +131,25 @@ class GitHook(ABC):
             self.logger.error(f"Failed to uninstall hook: {e}")
             return False
 
-    def _find_git_root(self) -> Optional[Path]:
-        current = Path.cwd()
-        for path in [current] + list(current.parents):
-            if (path / ".git").exists():
-                return path.resolve()
-        return None
-
-    def _get_module_and_class(self) -> tuple[str, str]:
-        module_name = self.__class__.__module__
-        class_name = self.__class__.__name__
-        return module_name, class_name
-
     def _find_project_root(self, module_name: str) -> Optional[Path]:
-        module_file_path = self._convert_module_name_to_file_path(module_name)
+        module_file_path = ModuleImportGateway.convert_module_name_to_file_path(
+            module_name
+        )
         current = Path.cwd()
         searched_paths = []
 
         for path in [current] + list(current.parents):
             resolved_path = path.resolve()
             searched_paths.append(resolved_path)
-            if self._is_valid_project_root(resolved_path, module_file_path):
+            if ModuleImportGateway.is_valid_project_root(
+                resolved_path, module_file_path
+            ):
                 return resolved_path
 
         self._log_project_root_not_found(
             module_name, module_file_path, current, searched_paths
         )
         return None
-
-    def _convert_module_name_to_file_path(self, module_name: str) -> Path:
-        module_path_parts = module_name.split(".")
-        return Path(*module_path_parts).with_suffix(".py")
-
-    def _is_valid_project_root(self, path: Path, module_file_path: Path) -> bool:
-        module_file = path / module_file_path
-        return module_file.exists() and (path / "githooklib").exists()
 
     def _log_project_root_not_found(
         self,
@@ -160,11 +166,6 @@ class GitHook(ABC):
             f"Searched in directories: {', '.join(str(p) for p in searched_paths)}"
         )
 
-    def _generate_delegator_script(self, module_name: str, class_name: str) -> str:
-        return DELEGATOR_SCRIPT_TEMPLATE.format(
-            module_name=module_name, class_name=class_name
-        )
-
     def _write_hook_delegation_script(
         self, hook_script_path: Path, script_content: str
     ) -> bool:
@@ -176,12 +177,6 @@ class GitHook(ABC):
         except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error(f"Failed to install hook: {e}")
             return False
-
-    def _write_script_file(self, hook_script_path: Path, script_content: str) -> None:
-        hook_script_path.write_text(script_content)
-
-    def _make_script_executable(self, hook_script_path: Path) -> None:
-        hook_script_path.chmod(0o755)
 
 
 __all__ = [

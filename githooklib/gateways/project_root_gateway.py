@@ -1,14 +1,14 @@
 from pathlib import Path
 from typing import Optional
 
+from .git_repository_gateway import GitRepositoryGateway
+
 
 class ProjectRootGateway:
-    def find_project_root(self) -> Optional[Path]:
-        current = Path.cwd()
-        for path in [current] + list(current.parents):
-            if (path / "githooklib").exists():
-                return path.resolve()
-        return None
+    @staticmethod
+    def find_project_root() -> Optional[Path]:
+        git = GitRepositoryGateway.find_git_root()
+        return git.parent if git else None
 
 
 __all__ = ["ProjectRootGateway"]

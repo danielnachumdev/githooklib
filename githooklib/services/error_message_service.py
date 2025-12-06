@@ -4,6 +4,25 @@ from .hook_discovery_service import HookDiscoveryService
 
 
 class ErrorMessageService:
+
+    @staticmethod
+    def _resolve_search_path(search_path: str, cwd: Path) -> Path:
+        if Path(search_path).is_absolute():
+            return Path(search_path)
+        return cwd / search_path
+
+    @staticmethod
+    def _add_search_dir_info(error_lines: list[str], search_dir: Path) -> None:
+        if not search_dir.exists() or not search_dir.is_dir():
+            error_lines.append(f"  - {search_dir} (directory does not exist)")
+            return
+
+        py_files = [f for f in search_dir.glob("*.py") if f.name != "__init__.py"]
+        if py_files:
+            error_lines.append(f"  - {search_dir} (found {len(py_files)} .py files)")
+        else:
+            error_lines.append(f"  - {search_dir} (no .py files found)")
+
     def __init__(self, hook_discovery_service: HookDiscoveryService) -> None:
         self.hook_discovery_service = hook_discovery_service
 
@@ -35,22 +54,6 @@ class ErrorMessageService:
         for search_path in hook_search_paths:
             search_dir = self._resolve_search_path(search_path, cwd)
             self._add_search_dir_info(error_lines, search_dir)
-
-    def _resolve_search_path(self, search_path: str, cwd: Path) -> Path:
-        if Path(search_path).is_absolute():
-            return Path(search_path)
-        return cwd / search_path
-
-    def _add_search_dir_info(self, error_lines: list[str], search_dir: Path) -> None:
-        if not search_dir.exists() or not search_dir.is_dir():
-            error_lines.append(f"  - {search_dir} (directory does not exist)")
-            return
-
-        py_files = [f for f in search_dir.glob("*.py") if f.name != "__init__.py"]
-        if py_files:
-            error_lines.append(f"  - {search_dir} (found {len(py_files)} .py files)")
-        else:
-            error_lines.append(f"  - {search_dir} (no .py files found)")
 
 
 __all__ = ["ErrorMessageService"]
