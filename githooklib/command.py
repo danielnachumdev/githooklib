@@ -23,7 +23,7 @@ class CommandExecutor:
     def __init__(self, logger: Optional[Logger] = None) -> None:
         self.logger = logger
 
-    def run(
+    def run(  # pylint: disable=too-many-positional-arguments
         self,
         command: Union[str, List[str]],
         cwd: Optional[Union[str, Path]] = None,
@@ -56,7 +56,7 @@ class CommandExecutor:
             cmd_str = " ".join(cmd_list)
             self.logger.debug(f"Executing: {cmd_str}")
 
-    def _execute_command(
+    def _execute_command(  # pylint: disable=too-many-positional-arguments
         self,
         cmd_list: List[str],
         cwd: Optional[Path],
@@ -73,10 +73,10 @@ class CommandExecutor:
             return self._create_error_result(e, cmd_list, capture_output)
         except FileNotFoundError:
             return self._create_not_found_result(cmd_list)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             return self._create_generic_error_result(e, cmd_list)
 
-    def _run_subprocess(
+    def _run_subprocess(  # pylint: disable=too-many-positional-arguments
         self,
         cmd_list: List[str],
         cwd: Optional[Path],
@@ -150,7 +150,7 @@ class CommandExecutor:
             command=cmd_list,
         )
 
-    def _create_result(
+    def _create_result(  # pylint: disable=too-many-positional-arguments
         self,
         success: bool,
         exit_code: int,

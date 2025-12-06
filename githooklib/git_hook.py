@@ -56,7 +56,7 @@ class GitHook(ABC):
             context = GitHookContext.from_stdin(self.hook_name)
             result = self.execute(context)
             return result.exit_code
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self._handle_error(e)
             return EXIT_FAILURE
 
@@ -79,7 +79,7 @@ class GitHook(ABC):
             return False
         hook_script_path = hooks_dir / self.hook_name
         script_content = self._generate_delegator_script(module_name, class_name)
-        return self._write_hook_script(hook_script_path, script_content)
+        return self._write_hook_delegation_script(hook_script_path, script_content)
 
     def _validate_installation_prerequisites(self) -> Optional[Path]:
         git_root = self._find_git_root()
@@ -105,7 +105,7 @@ class GitHook(ABC):
             hook_script_path.unlink()
             self.logger.success(f"Uninstalled hook: {self.hook_name}")
             return True
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error(f"Failed to uninstall hook: {e}")
             return False
 
@@ -165,13 +165,15 @@ class GitHook(ABC):
             module_name=module_name, class_name=class_name
         )
 
-    def _write_hook_script(self, hook_script_path: Path, script_content: str) -> bool:
+    def _write_hook_delegation_script(
+        self, hook_script_path: Path, script_content: str
+    ) -> bool:
         try:
             self._write_script_file(hook_script_path, script_content)
             self._make_script_executable(hook_script_path)
             self.logger.success(f"Installed hook: {self.hook_name}")
             return True
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error(f"Failed to install hook: {e}")
             return False
 

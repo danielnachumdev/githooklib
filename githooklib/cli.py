@@ -62,7 +62,7 @@ class CLI:
             Exit code (0 for success, 1 for failure)
         """
         try:
-            if not self._validate_hook_exists(hook_name):
+            if not self._hook_exists(hook_name):
                 return EXIT_FAILURE
             return self._api.run_hook(hook_name, debug=debug)
         except ValueError as e:
@@ -79,7 +79,7 @@ class CLI:
             Exit code (0 for success, 1 for failure)
         """
         try:
-            if not self._validate_hook_exists(hook_name):
+            if not self._hook_exists(hook_name):
                 return EXIT_FAILURE
             success = self._api.install_hook(hook_name)
             return EXIT_SUCCESS if success else EXIT_FAILURE
@@ -97,7 +97,7 @@ class CLI:
             Exit code (0 for success, 1 for failure)
         """
         try:
-            if not self._validate_hook_exists(hook_name):
+            if not self._hook_exists(hook_name):
                 return EXIT_FAILURE
             success = self._api.uninstall_hook(hook_name)
             return EXIT_SUCCESS if success else EXIT_FAILURE
@@ -105,7 +105,7 @@ class CLI:
             self._print_error(str(e))
             return EXIT_FAILURE
 
-    def _validate_hook_exists(self, hook_name: str) -> bool:
+    def _hook_exists(self, hook_name: str) -> bool:
         hooks = self._api.discover_hooks()
         if hook_name not in hooks:
             error_msg = self._api.get_hook_not_found_error_message(hook_name)
@@ -169,7 +169,7 @@ class CLI:
                 f"Failed to seed example '{example_name}'. " "Project root not found."
             )
             return EXIT_FAILURE
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self._print_error(f"Error seeding example: {e}")
             return EXIT_FAILURE
 

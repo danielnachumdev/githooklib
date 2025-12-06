@@ -2,10 +2,10 @@ import sys
 from typing import Optional
 
 from githooklib import GitHook, GitHookContext, HookResult
-from githooklib.command import CommandExecutor
+from githooklib.command import CommandExecutor, CommandResult
 
 
-def _check_black_exists(command_executor: CommandExecutor) -> bool:
+def _black_exists(command_executor: CommandExecutor) -> bool:
     check_result = command_executor.run(["python", "-m", "black", "--version"])
     if check_result.exit_code == 127:
         return False
@@ -24,11 +24,8 @@ def _get_modified_python_files(command_executor: CommandExecutor) -> list[str]:
     return [f for f in modified_files if f.endswith(".py")]
 
 
-def _stage_files(command_executor: CommandExecutor, files: list[str]) -> bool:
-    if not files:
-        return True
-    result = command_executor.run(["git", "add"] + files)
-    return result.success
+def _stage_files(command_executor: CommandExecutor, files: list[str]) -> CommandResult:
+    return command_executor.run(["git", "add"] + files)
 
 
 class BlackFormatterPreCommit(GitHook):
@@ -47,7 +44,7 @@ class BlackFormatterPreCommit(GitHook):
         self.stage_changes = stage_changes
 
     def execute(self, context: GitHookContext) -> HookResult:
-        if not _check_black_exists(self.command_executor):
+        if not _black_exists(self.command_executor):
             self.logger.warning("Black tool not found. Skipping code formatting check.")
             return HookResult(
                 success=True,
@@ -88,7 +85,8 @@ class BlackFormatterPreCommit(GitHook):
             modified_files = _get_modified_python_files(self.command_executor)
             if modified_files:
                 self.logger.info(f"Staging {len(modified_files)} formatted file(s)...")
-                if not _stage_files(self.command_executor, modified_files):
+                staging_result = _stage_files(self.command_executor, modified_files)
+                if not staging_result.success:
                     self.logger.error("Failed to stage formatted files.")
                     return HookResult(
                         success=False,

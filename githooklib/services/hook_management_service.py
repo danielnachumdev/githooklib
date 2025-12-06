@@ -1,8 +1,4 @@
 import logging
-from pathlib import Path
-from typing import Optional
-
-from ..git_hook import GitHook
 from ..constants import EXIT_FAILURE
 from .hook_discovery_service import HookDiscoveryService
 

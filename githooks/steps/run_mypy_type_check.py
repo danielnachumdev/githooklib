@@ -3,7 +3,7 @@ from githooklib.command import CommandExecutor
 from githooklib import HookResult
 
 
-def _check_mypy_exists(command_executor: CommandExecutor) -> bool:
+def _mypy_exists(command_executor: CommandExecutor) -> bool:
     check_result = command_executor.run(["python", "-m", "mypy", "--version"])
     if check_result.exit_code == 127:
         return False
@@ -15,7 +15,7 @@ def _check_mypy_exists(command_executor: CommandExecutor) -> bool:
 def run_mypy_type_check(
     logger: Logger, command_executor: CommandExecutor
 ) -> HookResult:
-    if not _check_mypy_exists(command_executor):
+    if not _mypy_exists(command_executor):
         logger.warning("mypy tool not found. Skipping type checking.")
         return HookResult(
             success=True,
