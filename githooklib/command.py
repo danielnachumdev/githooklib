@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from .logger import Logger
+from .constants import EXIT_FAILURE
 
 
 @dataclass
@@ -143,7 +144,7 @@ class CommandExecutor:
             self.logger.error(error_msg)
         return self._create_result(
             success=False,
-            exit_code=1,
+            exit_code=EXIT_FAILURE,
             stdout="",
             stderr=error_msg,
             command=cmd_list,

@@ -1,3 +1,6 @@
+EXIT_SUCCESS: int = 0
+EXIT_FAILURE: int = 1
+
 DELEGATOR_SCRIPT_TEMPLATE: str = """#!/usr/bin/env python3
 
 import sys
@@ -40,4 +43,4 @@ if __name__ == "__main__":
     main()
 """
 
-__all__ = ["DELEGATOR_SCRIPT_TEMPLATE"]
+__all__ = ["EXIT_SUCCESS", "EXIT_FAILURE", "DELEGATOR_SCRIPT_TEMPLATE"]

@@ -5,7 +5,7 @@ import traceback
 import logging
 from pathlib import Path
 
-from .constants import DELEGATOR_SCRIPT_TEMPLATE
+from .constants import DELEGATOR_SCRIPT_TEMPLATE, EXIT_SUCCESS, EXIT_FAILURE
 from .context import GitHookContext
 from .command import CommandExecutor
 from .logger import Logger
@@ -15,13 +15,13 @@ from .logger import Logger
 class HookResult:
     success: bool
     message: Optional[str] = None
-    exit_code: int = 0
+    exit_code: int = EXIT_SUCCESS
 
     def __post_init__(self):
-        if self.exit_code == 0 and not self.success:
-            self.exit_code = 1
-        elif self.exit_code != 0 and self.success:
-            self.exit_code = 0
+        if self.exit_code == EXIT_SUCCESS and not self.success:
+            self.exit_code = EXIT_FAILURE
+        elif self.exit_code != EXIT_SUCCESS and self.success:
+            self.exit_code = EXIT_SUCCESS
 
     def __bool__(self) -> bool:
         return self.success
@@ -58,7 +58,7 @@ class GitHook(ABC):
             return result.exit_code
         except Exception as e:
             self._handle_error(e)
-            return 1
+            return EXIT_FAILURE
 
     def _handle_error(self, error: Exception):
         self.logger.error(f"Unexpected error in hook: {error}")

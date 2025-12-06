@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from ..git_hook import GitHook
+from ..constants import EXIT_FAILURE
 from .hook_discovery_service import HookDiscoveryService
 
 
@@ -33,7 +34,7 @@ class HookManagementService:
     def run_hook(self, hook_name: str, debug: bool = False) -> int:
         hooks = self.hook_discovery_service.discover_hooks()
         if hook_name not in hooks:
-            return 1
+            return EXIT_FAILURE
         hook_class = hooks[hook_name]
         log_level = logging.DEBUG if debug else logging.INFO
         hook = hook_class(log_level=log_level)
