@@ -23,15 +23,26 @@ def run_mypy_type_check(
         )
 
     logger.info("Running mypy type checking...")
-    result = command_executor.run(["python", "-m", "mypy", "."])
+    result = command_executor.run(
+        ["python", "-m", "mypy", "--config-file", ".\\mypy.ini"]
+    )
 
     if not result.success:
-        logger.error("mypy type checking failed. Push aborted.")
+        error_details = []
+        if result.stdout:
+            error_details.append(result.stdout.strip())
         if result.stderr:
-            logger.error(result.stderr)
+            error_details.append(result.stderr.strip())
+
+        error_message = "\n".join(error_details) if error_details else "Unknown error"
+        separator = "-" * 70
+
+        logger.error("mypy type checking failed. Push aborted.")
+        logger.error(f"\n{separator}\n{error_message}\n{separator}")
+
         return HookResult(
             success=False,
-            message="mypy type checking failed. Push aborted.",
+            message=f"mypy type checking failed. Push aborted.\n{separator}\n{error_message}\n{separator}",
             exit_code=1,
         )
 
