@@ -1,5 +1,5 @@
 quickpub
 tqdm
 setuptools
-fire
+fire==0.7.1
 black

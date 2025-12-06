@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Testing Guidelines for AI Coding Assistants
 
 ## Test Structure

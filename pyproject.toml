@@ -11,7 +11,7 @@ authors = [
 dependencies = ['fire']
 keywords = []
 license = { "file" = "./LICENSE" }
-description = "A Python framework for creating, managing, and installing Git hooks with automatic discovery and CLI tools."
+description = "A Python framework (and CLI) for creating, managing, and installing Git hooks with python"
 readme = {file = "./README.md", content-type = "text/markdown"}
 requires-python = ">=3.8.0"
 classifiers = [
@@ -22,6 +22,7 @@ classifiers = [
 ]
 [project.scripts]
     githooklib = "githooklib.__main__:main"
+    githooks = "githooklib.__main__:main"
 
 [tool.setuptools]
 packages = ["githooklib"]

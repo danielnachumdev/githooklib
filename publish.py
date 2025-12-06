@@ -36,7 +36,7 @@ def main() -> None:
         upload_targets=[PypircUploadTarget(), GithubUploadTarget()],
         python_interpreter_provider=DefaultPythonProvider(),
         global_quality_assurance_runners=[],
-        scripts={"githooklib": entry_point, "githook": entry_point},
+        scripts={"githooklib": entry_point, "githooks": entry_point},
         pbar=tqdm(desc="QA", leave=False),  # type: ignore
         demo=True,
     )

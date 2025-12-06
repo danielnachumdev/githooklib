@@ -79,6 +79,19 @@ class API:
     def get_available_examples(self) -> list[str]:
         return self.hook_seeding_service.get_available_examples()
 
+    def is_example_available(self, example_name: str) -> bool:
+        return self.hook_seeding_service.is_example_available(example_name)
+
+    def get_target_hook_path(self, example_name: str) -> Optional[Path]:
+        return self.hook_seeding_service.get_target_hook_path(
+            example_name, target_project_root=self.project_root
+        )
+
+    def does_target_hook_exist(self, example_name: str) -> bool:
+        return self.hook_seeding_service.does_target_hook_exist(
+            example_name, target_project_root=self.project_root
+        )
+
     def seed_hook(self, example_name: str) -> bool:
         return self.hook_seeding_service.seed_hook(
             example_name, target_project_root=self.project_root

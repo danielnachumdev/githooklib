@@ -1,12 +1,17 @@
+import functools
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional, ParamSpec
 
 from .api import API
 from .constants import EXIT_SUCCESS, EXIT_FAILURE
 
 
 class CLI:
+    @staticmethod
+    def _print_error(message: str) -> None:
+        print(f"Error: {message}", file=sys.stderr)
+
     def __init__(
         self,
         project_root: Optional[Path] = None,
@@ -113,9 +118,6 @@ class CLI:
             return False
         return True
 
-    def _print_error(self, message: str) -> None:
-        print(f"Error: {message}", file=sys.stderr)
-
     def seed(self, example_name: Optional[str] = None) -> int:
         """Seed an example hook from the examples folder to githooks/.
 
@@ -128,50 +130,56 @@ class CLI:
             Exit code (0 for success, 1 for failure)
         """
         if example_name is None:
-            available_examples = self._api.get_available_examples()
-            if not available_examples:
-                print("No example hooks available")
-                return EXIT_FAILURE
-            print("Available example hooks:")
-            for example in available_examples:
-                print(f"  - {example}")
-            return EXIT_SUCCESS
+            return self._list_available_examples()
+        return self._seed_example_hook(example_name)
 
+    def _list_available_examples(self) -> int:
+        available_examples = self._api.get_available_examples()
+        if not available_examples:
+            print("No example hooks available")
+            return EXIT_FAILURE
+        print("Available example hooks:")
+        for example in available_examples:
+            print(f"  - {example}")
+        return EXIT_SUCCESS
+
+    def _seed_example_hook(self, example_name: str) -> int:
         try:
             success = self._api.seed_hook(example_name)
             if success:
                 print(f"Successfully seeded example '{example_name}' to githooks/")
                 return EXIT_SUCCESS
+            return self._handle_seed_failure(example_name)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            self._print_error(f"Error seeding example: {e}")
+            return EXIT_FAILURE
 
+    def _handle_seed_failure(self, example_name: str) -> int:
+        if not self._api.is_example_available(example_name):
             available_examples = self._api.get_available_examples()
-            if example_name not in available_examples:
-                self._print_error(
-                    f"Example '{example_name}' not found. "
-                    f"Available examples: {', '.join(available_examples)}"
-                )
-                return EXIT_FAILURE
+            self._print_error(
+                f"Example '{example_name}' not found. "
+                f"Available examples: {', '.join(available_examples)}"
+            )
+            return EXIT_FAILURE
 
-            if self._api.project_root is None:
-                self._print_error(
-                    f"Failed to seed example '{example_name}'. "
-                    "Project root not found."
-                )
-                return EXIT_FAILURE
-
-            target_file = self._api.project_root / "githooks" / f"{example_name}.py"
-            if target_file.exists():
-                self._print_error(
-                    f"Example '{example_name}' already exists at {target_file}"
-                )
-                return EXIT_FAILURE
-
+        target_path = self._api.get_target_hook_path(example_name)
+        if target_path is None:
             self._print_error(
                 f"Failed to seed example '{example_name}'. " "Project root not found."
             )
             return EXIT_FAILURE
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            self._print_error(f"Error seeding example: {e}")
+
+        if self._api.does_target_hook_exist(example_name):
+            self._print_error(
+                f"Example '{example_name}' already exists at {target_path}"
+            )
             return EXIT_FAILURE
+
+        self._print_error(
+            f"Failed to seed example '{example_name}'. Project root not found."
+        )
+        return EXIT_FAILURE
 
 
 __all__ = ["CLI"]
