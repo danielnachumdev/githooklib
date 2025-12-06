@@ -7,9 +7,7 @@ class GitRepositoryGateway:
     @staticmethod
     def find_git_root() -> Optional[Path]:
         git_root = GitRepositoryGateway._find_git_root_via_command()
-        if git_root:
-            return git_root
-        return GitRepositoryGateway._find_git_root_via_filesystem()
+        return git_root or GitRepositoryGateway._find_git_root_via_filesystem()
 
     @staticmethod
     def _find_git_root_via_command() -> Optional[Path]:
