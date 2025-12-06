@@ -49,6 +49,8 @@
 ### Assertions
 - Use Path object properties and methods instead of string manipulation
 - Compare Path objects directly using `assertEqual()` when possible
+- **`assertEqual()` argument order**: First argument is the **expected** value, second argument is the **actual** value
+  - Example: `self.assertEqual(expected_value, actual_value)`
 - Use `assertIsNone()` and `assertIsNotNone()` appropriately
 - Use `unwrap_optional()` when you need to access attributes after asserting not None
 
@@ -75,7 +77,7 @@ class TestGitRepositoryGateway(BaseTestCase):
     def test_find_git_root_ends_with_githooklib(self):
         result = GitRepositoryGateway.find_git_root()
         result = self.unwrap_optional(result)
-        self.assertEqual(result.name, "githooklib")
+        self.assertEqual("githooklib", result.name)
         self.assertTrue((result / ".git").exists())
 
     def test_find_git_root_subprocess_fails_returns_none(self):
@@ -110,7 +112,7 @@ def test_something_with_temp_file(self):
 def test_method_returns_optional(self):
     result = self.unwrap_optional(SomeClass.method_that_returns_optional())
     # Now mypy knows it's not None - call unwrap_optional on the same point
-    self.assertEqual(result.some_attribute, expected_value)
+    self.assertEqual(expected_value, result.some_attribute)  # expected first, actual second
 ```
 
 ### Using Subtests for Related Cases
