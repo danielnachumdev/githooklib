@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from typing import Optional
 
 
 class ModuleImportGateway:
@@ -28,8 +29,8 @@ class ModuleImportGateway:
             sys.path.insert(0, str(directory))
 
     def find_module_file(
-        self, module_name: str, project_root: Path | None
-    ) -> str | None:
+        self, module_name: str, project_root: Optional[Path]
+    ) -> Optional[str]:
         try:
             import importlib.util
 
