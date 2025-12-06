@@ -138,29 +138,39 @@ class CLI:
 
         try:
             success = self._api.seed_hook(example_name)
-            if not success:
-                available_examples = self._api.get_available_examples()
-                if example_name not in available_examples:
-                    self._print_error(
-                        f"Example '{example_name}' not found. "
-                        f"Available examples: {', '.join(available_examples)}"
-                    )
-                else:
-                    target_file = (
-                        self._api.project_root / "githooks" / f"{example_name}.py"
-                    )
-                    if target_file.exists():
-                        self._print_error(
-                            f"Example '{example_name}' already exists at {target_file}"
-                        )
-                    else:
-                        self._print_error(
-                            f"Failed to seed example '{example_name}'. "
-                            "Project root not found."
-                        )
+            if success:
+                print(f"Successfully seeded example '{example_name}' to githooks/")
+                return 0
+
+            available_examples = self._api.get_available_examples()
+            if example_name not in available_examples:
+                self._print_error(
+                    f"Example '{example_name}' not found. "
+                    f"Available examples: {', '.join(available_examples)}"
+                )
                 return 1
-            print(f"Successfully seeded example '{example_name}' to githooks/")
-            return 0
+
+            if self._api.project_root is None:
+                self._print_error(
+                    f"Failed to seed example '{example_name}'. "
+                    "Project root not found."
+                )
+                return 1
+
+            target_file = (
+                self._api.project_root / "githooks" / f"{example_name}.py"
+            )
+            if target_file.exists():
+                self._print_error(
+                    f"Example '{example_name}' already exists at {target_file}"
+                )
+                return 1
+
+            self._print_error(
+                f"Failed to seed example '{example_name}'. "
+                "Project root not found."
+            )
+            return 1
         except Exception as e:
             self._print_error(f"Error seeding example: {e}")
             return 1
