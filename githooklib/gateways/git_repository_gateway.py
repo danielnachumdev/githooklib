@@ -3,7 +3,8 @@ from typing import Optional
 
 
 class GitRepositoryGateway:
-    def find_git_root(self) -> Optional[Path]:
+    @staticmethod
+    def find_git_root() -> Optional[Path]:
         current = Path.cwd()
         for path in [current] + list(current.parents):
             if (path / ".git").exists():
@@ -19,7 +20,8 @@ class GitRepositoryGateway:
                 installed[hook_name] = is_tool_installed
         return installed
 
-    def _is_tool_installed_hook(self, hook_path: Path) -> bool:
+    @staticmethod
+    def _is_tool_installed_hook(hook_path: Path) -> bool:
         try:
             content = hook_path.read_text()
             return "githooklib" in content and "find_project_root" in content
