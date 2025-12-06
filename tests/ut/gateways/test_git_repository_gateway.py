@@ -29,8 +29,8 @@ class TestGitRepositoryGateway(BaseTestCase):
     def test_find_git_root_via_command_ends_with_githooklib(self):
         result = GitRepositoryGateway._find_git_root_via_command()
         result = self.unwrap_optional(result)
-        self.assertEqual(result.name, "githooklib")
-        self.assertTrue((result / ".git").exists())
+        self.assertEqual("githooklib/.git", "/".join(result.parts[-2:]))
+        self.assertTrue(result.exists())
 
     def test_find_git_root_via_command_no_git_directory_returns_none(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -64,8 +64,8 @@ class TestGitRepositoryGateway(BaseTestCase):
     def test_find_git_root_ends_with_githooklib(self):
         result = GitRepositoryGateway.find_git_root()
         result = self.unwrap_optional(result)
-        self.assertEqual(result.name, "githooklib")
-        self.assertTrue((result / ".git").exists())
+        self.assertEqual("githooklib/.git", "/".join(result.parts[-2:]))
+        self.assertTrue(result.exists())
 
     def test_find_git_root_no_repo_returns_none(self):
         with tempfile.TemporaryDirectory() as temp_dir:

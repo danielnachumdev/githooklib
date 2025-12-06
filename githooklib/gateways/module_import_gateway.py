@@ -2,32 +2,10 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from .git_repository_gateway import GitRepositoryGateway
+
 
 class ModuleImportGateway:
-    def import_module(self, module_path: Path, base_dir: Path) -> None:
-        module_path = module_path.resolve()
-        try:
-            relative_path = module_path.relative_to(base_dir)
-            self._import_relative_module(relative_path, base_dir)
-        except ValueError:
-            self._import_absolute_module(module_path)
-
-    def _import_relative_module(self, relative_path: Path, base_dir: Path) -> None:
-        parts = relative_path.parts[:-1] + (relative_path.stem,)
-        module_name = ".".join(parts)
-        self._add_to_sys_path_if_needed(base_dir)
-        __import__(module_name)
-
-    def _import_absolute_module(self, module_path: Path) -> None:
-        parent_dir = module_path.parent.resolve()
-        self._add_to_sys_path_if_needed(parent_dir)
-        module_name = module_path.stem
-        __import__(module_name)
-
-    def _add_to_sys_path_if_needed(self, directory: Path) -> None:
-        if str(directory) not in sys.path:
-            sys.path.insert(0, str(directory))
-
     @staticmethod
     def find_module_file(
         module_name: str, project_root: Optional[Path]
@@ -57,7 +35,32 @@ class ModuleImportGateway:
     @staticmethod
     def is_valid_project_root(path: Path, module_file_path: Path) -> bool:
         module_file = path / module_file_path
-        return module_file.exists() and (path / "githooklib").exists()
+        return module_file.exists() and GitRepositoryGateway.is_git_root(path)
+
+    @staticmethod
+    def _add_to_sys_path_if_needed(directory: Path) -> None:
+        if str(directory) not in sys.path:
+            sys.path.insert(0, str(directory))
+
+    def import_module(self, module_path: Path, base_dir: Path) -> None:
+        module_path = module_path.resolve()
+        try:
+            relative_path = module_path.relative_to(base_dir)
+            self._import_relative_module(relative_path, base_dir)
+        except ValueError:
+            self._import_absolute_module(module_path)
+
+    def _import_relative_module(self, relative_path: Path, base_dir: Path) -> None:
+        parts = relative_path.parts[:-1] + (relative_path.stem,)
+        module_name = ".".join(parts)
+        self._add_to_sys_path_if_needed(base_dir)
+        __import__(module_name)
+
+    def _import_absolute_module(self, module_path: Path) -> None:
+        parent_dir = module_path.parent.resolve()
+        self._add_to_sys_path_if_needed(parent_dir)
+        module_name = module_path.stem
+        __import__(module_name)
 
 
 __all__ = ["ModuleImportGateway"]

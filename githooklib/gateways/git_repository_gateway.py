@@ -20,7 +20,7 @@ class GitRepositoryGateway:
             )
             git_root = Path(result.stdout.strip()).resolve()
             if (git_root / ".git").exists():
-                return git_root
+                return git_root / ".git"
             return None
         except (subprocess.CalledProcessError, FileNotFoundError):
             return None
@@ -49,6 +49,10 @@ class GitRepositoryGateway:
             return "githooklib" in content and "find_project_root" in content
         except (OSError, IOError, UnicodeDecodeError):
             return False
+
+    @staticmethod
+    def is_git_root(path: Path) -> bool:
+        return (path / ".git").exists()
 
 
 __all__ = ["GitRepositoryGateway"]

@@ -11,6 +11,7 @@ from .command import CommandExecutor
 from .logger import Logger
 from .gateways.git_repository_gateway import GitRepositoryGateway
 from .gateways.module_import_gateway import ModuleImportGateway
+from .gateways.project_root_gateway import ProjectRootGateway
 
 
 @dataclass
@@ -95,7 +96,7 @@ class GitHook(ABC):
         if not hooks_dir:
             return False
         module_name, class_name = self._get_module_and_class()
-        project_root = self._find_project_root(module_name)
+        project_root = ProjectRootGateway.find_project_root()
         if not project_root:
             self.logger.error(f"Could not find project root containing {module_name}")
             return False
@@ -108,7 +109,7 @@ class GitHook(ABC):
         if not git_root:
             self.logger.error("Not a git repository")
             return None
-        hooks_dir = git_root / ".git" / "hooks"
+        hooks_dir = git_root / "hooks"
         if not hooks_dir.exists():
             self.logger.error(f"Hooks directory not found: {hooks_dir}")
             return None
@@ -131,39 +132,18 @@ class GitHook(ABC):
             self.logger.error(f"Failed to uninstall hook: {e}")
             return False
 
-    def _find_project_root(self, module_name: str) -> Optional[Path]:
+    def _log_project_root_not_found(self, module_name: str) -> None:
         module_file_path = ModuleImportGateway.convert_module_name_to_file_path(
             module_name
         )
         current = Path.cwd()
-        searched_paths = []
-
-        for path in [current] + list(current.parents):
-            resolved_path = path.resolve()
-            searched_paths.append(resolved_path)
-            if ModuleImportGateway.is_valid_project_root(
-                resolved_path, module_file_path
-            ):
-                return resolved_path
-
-        self._log_project_root_not_found(
-            module_name, module_file_path, current, searched_paths
-        )
-        return None
-
-    def _log_project_root_not_found(
-        self,
-        module_name: str,
-        module_file_path: Path,
-        current: Path,
-        searched_paths: list[Path],
-    ) -> None:
+        searched_paths = [current] + list(current.parents)
         full_module_path = current.resolve() / module_file_path
         self.logger.error(
             f"Could not find project root containing {module_name}. "
             f"Checked for module file at: {full_module_path} "
             f"(resolved from CWD: {current.resolve()}). "
-            f"Searched in directories: {', '.join(str(p) for p in searched_paths)}"
+            f"Searched in directories: {', '.join(str(p.resolve()) for p in searched_paths)}"
         )
 
     def _write_hook_delegation_script(
