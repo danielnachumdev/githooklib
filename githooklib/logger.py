@@ -13,7 +13,7 @@ class StreamRouter(logging.Handler):
         try:
             msg = self._format_message(record)
             self._write_to_stream(record, msg)
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             self.handleError(record)
 
     def _format_message(self, record) -> str:
@@ -83,7 +83,7 @@ class Logger:
         self.logger.info(" %s", message)
 
     def success(self, message: str):
-        self.logger.info("✓ %s", message)
+        self.logger.info("[V] %s", message)
 
     def warning(self, message: str):
         self.logger.warning(message)

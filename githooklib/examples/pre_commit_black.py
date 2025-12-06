@@ -47,7 +47,7 @@ class BlackFormatterPreCommit(GitHook):
         self.stage_changes = stage_changes
 
     def execute(self, context: GitHookContext) -> HookResult:
-        if not _check_black_exists( self.command_executor):
+        if not _check_black_exists(self.command_executor):
             self.logger.warning("Black tool not found. Skipping code formatting check.")
             return HookResult(
                 success=True,
