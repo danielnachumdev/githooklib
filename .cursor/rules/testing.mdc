@@ -1,0 +1,133 @@
+# Testing Guidelines for AI Coding Assistants
+
+## Test Structure
+
+### Directory Organization
+- All unit tests should be placed in the `tests/ut/` folder
+- The test structure should mirror the project structure, but **without** the redundant top-level package name
+- Example: Tests for `githooklib/gateways/git_repository_gateway.py` should be in `tests/ut/gateways/test_git_repository_gateway.py`
+- Each test file should have a `test_` prefix
+
+### Test File Organization
+- **One test class per test file** - if multiple test classes are needed for different scenarios, they should be in separate files under a folder
+- Test class names should follow the pattern: `Test<ClassName>_<Scenario?>` where:
+  - `<Operation>` is optional and only used when testing multiple coherent different things regarding the same class
+  - Example: `TestGitRepositoryGateway` (single Scenario) or `TestGitRepositoryGateway_Scenario1` (when multiple scenarios exist)
+- All test classes should inherit from the most appropriate base test case:
+  - **Always inherit from a base-test-case class** if possible
+  - Search for more specialized base classes deeper in the folder hierarchy if they exist
+  - More specialized base classes should be used when available, but a base-test-case should almost always be in the inheritance chain
+
+## Test Implementation
+
+### Base Test Case
+- (almost) Always inherit from `BaseTestCase` instead of `unittest.TestCase`
+- Use `self.unwrap_optional(value)` instead of `self.assertIsNotNone(value)` when you need to access attributes on Optional types. This provides proper type narrowing for mypy without warnings
+
+### Testing Philosophy
+- **Tests are part of the source code** - test code should have the same level of respect and care as the "real" source code
+- **Follow Uncle Bob Clean Code guidelines for tests** - apply the same clean code principles to test code
+- **Real functionality vs mocks**: We do not necessarily prefer real functionality over mocks
+  - If it's not clear which approach to use, **ask the user**
+  - We may use a combination of both approaches
+  - Use real functionality when it makes sense (e.g., file system operations, actual repository)
+  - Use mocks when appropriate (e.g., external services, subprocess calls that would fail, isolating specific behavior)
+- Test against the actual repository when possible
+- Use temporary directories and files for isolated tests
+
+### Code Organization
+- Use `setUp()` and `tearDown()` methods to minimize code duplication
+- Create helper methods (prefixed with `_`) for common test setup patterns
+- Follow clean code principles: small, focused functions with descriptive names
+- Group related tests using `subTest()` when testing multiple scenarios of the same behavior
+
+### Test Naming
+- Test method names should be descriptive and explain what is being tested
+- Use format: `test_<method_name>_<scenario>_<expected_result>`
+- Example: `test_find_git_root_via_command_subprocess_fails_returns_none`
+
+### Assertions
+- Use Path object properties and methods instead of string manipulation
+- Compare Path objects directly using `assertEqual()` when possible
+- Use `assertIsNone()` and `assertIsNotNone()` appropriately
+- Use `unwrap_optional()` when you need to access attributes after asserting not None
+
+### Type Safety
+- All tests should pass mypy type checking
+- Use `unwrap_optional()` from `BaseTestCase` to handle Optional types
+- Never use `# type: ignore` comments unless absolutely necessary
+
+## Example Test Structure
+
+```python
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from githooklib.gateways.git_repository_gateway import GitRepositoryGateway
+from ..base_test_case import BaseTestCase
+
+
+class TestGitRepositoryGateway(BaseTestCase):
+    def setUp(self):
+        self.gateway = GitRepositoryGateway()
+
+    def test_find_git_root_ends_with_githooklib(self):
+        result = GitRepositoryGateway.find_git_root()
+        result = self.unwrap_optional(result)
+        self.assertEqual(result.name, "githooklib")
+        self.assertTrue((result / ".git").exists())
+
+    def test_find_git_root_subprocess_fails_returns_none(self):
+        with self.subTest("file_not_found_error"):
+            with patch("subprocess.run", side_effect=FileNotFoundError()):
+                result = GitRepositoryGateway._find_git_root_via_command()
+                self.assertIsNone(result)
+```
+
+## Key Principles
+
+1. **Single Responsibility**: Each test should verify one specific behavior
+2. **Independence**: Tests should not depend on each other
+3. **Repeatability**: Tests should produce the same results every time
+4. **Clarity**: Test code should be self-documenting through good naming
+5. **Minimal Mocking**: Use real functionality unless mocking is necessary
+6. **Type Safety**: All tests must be type-safe and pass mypy checks
+
+## Common Patterns
+
+### Testing with Temporary Files/Directories
+```python
+def test_something_with_temp_file(self):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        test_file = Path(temp_dir) / "test.txt"
+        test_file.write_text("content")
+        # test logic here
+```
+
+### Testing Optional Return Values
+```python
+def test_method_returns_optional(self):
+    result = self.unwrap_optional(SomeClass.method_that_returns_optional())
+    # Now mypy knows it's not None - call unwrap_optional on the same point
+    self.assertEqual(result.some_attribute, expected_value)
+```
+
+### Using Subtests for Related Cases
+```python
+def test_multiple_error_scenarios(self):
+    with self.subTest("scenario_one"):
+        # test scenario one
+    with self.subTest("scenario_two"):
+        # test scenario two
+```
+
+## What NOT to Do
+
+- Don't create redundant folder structures (e.g., `tests/ut/githooklib/...`)
+- Don't assume real functionality is always preferred over mocks - ask the user if unclear
+- Don't use string manipulation on Path objects - use Path methods
+- Don't ignore type checking warnings - use proper type narrowing
+- Don't create test classes with multiple responsibilities - split into separate files
+- Don't test implementation details - test behavior and outcomes
+- Don't write test code with less care than production code - tests are part of the source code

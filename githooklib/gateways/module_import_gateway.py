@@ -33,11 +33,6 @@ class ModuleImportGateway:
         return Path(*module_path_parts).with_suffix(".py")
 
     @staticmethod
-    def is_valid_project_root(path: Path, module_file_path: Path) -> bool:
-        module_file = path / module_file_path
-        return module_file.exists() and GitRepositoryGateway.is_git_root(path)
-
-    @staticmethod
     def _add_to_sys_path_if_needed(directory: Path) -> None:
         if str(directory) not in sys.path:
             sys.path.insert(0, str(directory))
