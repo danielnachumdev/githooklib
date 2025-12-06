@@ -17,7 +17,7 @@ class HookResult:
     message: Optional[str] = None
     exit_code: int = EXIT_SUCCESS
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.exit_code == EXIT_SUCCESS and not self.success:
             self.exit_code = EXIT_FAILURE
         elif self.exit_code != EXIT_SUCCESS and self.success:
@@ -60,7 +60,7 @@ class GitHook(ABC):
             self._handle_error(e)
             return EXIT_FAILURE
 
-    def _handle_error(self, error: Exception):
+    def _handle_error(self, error: Exception) -> None:
         self.logger.error(f"Unexpected error in hook: {error}")
         self.logger.error(traceback.format_exc())
 
@@ -151,7 +151,7 @@ class GitHook(ABC):
         module_file_path: Path,
         current: Path,
         searched_paths: list[Path],
-    ):
+    ) -> None:
         full_module_path = current.resolve() / module_file_path
         self.logger.error(
             f"Could not find project root containing {module_name}. "
@@ -177,10 +177,10 @@ class GitHook(ABC):
             self.logger.error(f"Failed to install hook: {e}")
             return False
 
-    def _write_script_file(self, hook_script_path: Path, script_content: str):
+    def _write_script_file(self, hook_script_path: Path, script_content: str) -> None:
         hook_script_path.write_text(script_content)
 
-    def _make_script_executable(self, hook_script_path: Path):
+    def _make_script_executable(self, hook_script_path: Path) -> None:
         hook_script_path.chmod(0o755)
 
 

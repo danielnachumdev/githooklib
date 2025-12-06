@@ -15,7 +15,7 @@ class HookDiscoveryService:
         hook_search_paths: list[str],
         project_root_gateway: ProjectRootGateway,
         module_import_gateway: ModuleImportGateway,
-    ):
+    ) -> None:
         self.project_root = project_root
         self.hook_search_paths = hook_search_paths
         self.project_root_gateway = project_root_gateway

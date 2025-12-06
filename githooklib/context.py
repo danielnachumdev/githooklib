@@ -11,7 +11,7 @@ class GitHookContext:
     stdin_lines: List[str]
     project_root: Optional[Path] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.project_root is None:
             self.project_root = self._find_project_root()
 

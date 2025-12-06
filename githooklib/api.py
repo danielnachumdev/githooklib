@@ -18,7 +18,7 @@ class API:
         self,
         project_root: Optional[Path] = None,
         hook_search_paths: Optional[list[str]] = None,
-    ):
+    ) -> None:
         project_root_gateway = ProjectRootGateway()
         git_repository_gateway = GitRepositoryGateway()
         module_import_gateway = ModuleImportGateway()

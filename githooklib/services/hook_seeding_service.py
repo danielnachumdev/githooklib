@@ -9,7 +9,7 @@ class HookSeedingService:
     EXAMPLES_DIR = "examples"
     TARGET_HOOKS_DIR = "githooks"
 
-    def __init__(self, project_root_gateway: ProjectRootGateway):
+    def __init__(self, project_root_gateway: ProjectRootGateway) -> None:
         self.project_root_gateway = project_root_gateway
 
     def get_examples_path(self) -> Path:

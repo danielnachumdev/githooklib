@@ -51,7 +51,7 @@ class CommandExecutor:
             return None
         return Path(cwd) if isinstance(cwd, str) else cwd
 
-    def _log_command(self, cmd_list: List[str]):
+    def _log_command(self, cmd_list: List[str]) -> None:
         if self.logger:
             cmd_str = " ".join(cmd_list)
             self.logger.debug(f"Executing: {cmd_str}")

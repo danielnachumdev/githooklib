@@ -11,7 +11,7 @@ class CLI:
         self,
         project_root: Optional[Path] = None,
         hook_search_paths: Optional[list[str]] = None,
-    ):
+    ) -> None:
         self._api = API(project_root=project_root, hook_search_paths=hook_search_paths)
 
     def list(self) -> None:

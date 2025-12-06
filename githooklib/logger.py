@@ -9,7 +9,7 @@ class StreamRouter(logging.Handler):
         self.stdout = stdout
         self.stderr = stderr
 
-    def emit(self, record):
+    def emit(self, record) -> None:
         try:
             msg = self._format_message(record)
             self._write_to_stream(record, msg)
@@ -19,7 +19,7 @@ class StreamRouter(logging.Handler):
     def _format_message(self, record) -> str:
         return self.format(record) + "\n"
 
-    def _write_to_stream(self, record, msg: str):
+    def _write_to_stream(self, record, msg: str) -> None:
         if self._is_error_level(record):
             self._write_to_stderr(msg)
         else:
@@ -28,17 +28,17 @@ class StreamRouter(logging.Handler):
     def _is_error_level(self, record) -> bool:
         return record.levelno >= logging.ERROR
 
-    def _write_to_stderr(self, msg: str):
+    def _write_to_stderr(self, msg: str) -> None:
         self.stderr.write(msg)
         self.stderr.flush()
 
-    def _write_to_stdout(self, msg: str):
+    def _write_to_stdout(self, msg: str) -> None:
         self.stdout.write(msg)
         self.stdout.flush()
 
 
 class Logger:
-    def __init__(self, prefix: str = "[githooklib]", level: int = logging.INFO):
+    def __init__(self, prefix: str = "[githooklib]", level: int = logging.INFO) -> None:
         self.prefix = prefix
         self.logger = logging.getLogger(prefix)
         if not self.logger.handlers:
@@ -62,7 +62,7 @@ class Logger:
         handler.setLevel(level)
         return handler
 
-    def _configure_logger(self, handler: StreamRouter, level: int):
+    def _configure_logger(self, handler: StreamRouter, level: int) -> None:
         self.logger.addHandler(handler)
         self.logger.setLevel(level)
         self.logger.propagate = False
@@ -73,22 +73,22 @@ class Logger:
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-    def log(self, message: str):
+    def log(self, message: str) -> None:
         self.logger.info(message)
 
-    def error(self, message: str):
+    def error(self, message: str) -> None:
         self.logger.error(message)
 
-    def info(self, message: str):
+    def info(self, message: str) -> None:
         self.logger.info(" %s", message)
 
-    def success(self, message: str):
+    def success(self, message: str) -> None:
         self.logger.info("[V] %s", message)
 
-    def warning(self, message: str):
+    def warning(self, message: str) -> None:
         self.logger.warning(message)
 
-    def debug(self, message: str):
+    def debug(self, message: str) -> None:
         self.logger.debug(message)
 
 

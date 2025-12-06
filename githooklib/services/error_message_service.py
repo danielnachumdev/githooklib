@@ -4,7 +4,7 @@ from .hook_discovery_service import HookDiscoveryService
 
 
 class ErrorMessageService:
-    def __init__(self, hook_discovery_service: HookDiscoveryService):
+    def __init__(self, hook_discovery_service: HookDiscoveryService) -> None:
         self.hook_discovery_service = hook_discovery_service
 
     def get_hook_not_found_error_message(self, hook_name: str) -> str:

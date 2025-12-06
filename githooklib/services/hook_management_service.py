@@ -4,7 +4,7 @@ from .hook_discovery_service import HookDiscoveryService
 
 
 class HookManagementService:
-    def __init__(self, hook_discovery_service: HookDiscoveryService):
+    def __init__(self, hook_discovery_service: HookDiscoveryService) -> None:
         self.hook_discovery_service = hook_discovery_service
 
     def list_hooks(self) -> list[str]:
