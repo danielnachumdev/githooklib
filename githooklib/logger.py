@@ -1,6 +1,7 @@
 import logging
 import sys
-from typing import IO
+from pathlib import Path
+from typing import IO, Optional
 
 
 class StreamRouter(logging.Handler):
@@ -37,23 +38,23 @@ class StreamRouter(logging.Handler):
         self.stdout.flush()
 
 
-class Logger:
-    def __init__(self, prefix: str = "[githooklib]", level: int = logging.INFO) -> None:
+class Logger(logging.Logger):
+    def __init__(self, prefix: str, level: int = logging.INFO) -> None:
+        unique_name = f"{prefix}_{id(self)}"
+        super().__init__(unique_name)
         self.prefix = prefix
-        self.logger = logging.getLogger(prefix)
-        if not self.logger.handlers:
-            self._setup_handlers(level)
-        else:
-            self.set_level(level)
+        self.setLevel(level)
+        self.propagate = False
+        self._setup_handlers(level)
 
     def set_level(self, level: int) -> None:
-        self.logger.setLevel(level)
-        for handler in self.logger.handlers:
+        self.setLevel(level)
+        for handler in self.handlers:
             handler.setLevel(level)
 
     def _setup_handlers(self, level: int = logging.INFO) -> None:
         handler = self._create_handler(level)
-        self._configure_logger(handler, level)
+        self.addHandler(handler)
 
     def _create_handler(self, level: int) -> StreamRouter:
         handler = StreamRouter(sys.stdout, sys.stderr)
@@ -62,34 +63,23 @@ class Logger:
         handler.setLevel(level)
         return handler
 
-    def _configure_logger(self, handler: StreamRouter, level: int) -> None:
-        self.logger.addHandler(handler)
-        self.logger.setLevel(level)
-        self.logger.propagate = False
-
     def _create_formatter(self) -> logging.Formatter:
         return logging.Formatter(
-            f"{self.prefix} [%(asctime)s] [%(levelname)s] %(message)s",
+            f"[{self.prefix} - %(levelname)-5s - %(asctime)s- %(filename)s:%(lineno)d] %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-    def log(self, message: str) -> None:
-        self.logger.info(message)
-
-    def error(self, message: str) -> None:
-        self.logger.error(message)
-
-    def info(self, message: str) -> None:
-        self.logger.info(" %s", message)
-
     def success(self, message: str) -> None:
-        self.logger.info("[V] %s", message)
-
-    def warning(self, message: str) -> None:
-        self.logger.warning(message)
-
-    def debug(self, message: str) -> None:
-        self.logger.debug(message)
+        super().info(f"[V] %s", message)
 
 
-__all__ = ["Logger"]
+def get_logger(
+    file_path: str, level: int = logging.INFO, prefix: str = "githooklib"
+) -> Logger:
+    if prefix is None:
+        filename = Path(file_path).stem
+        prefix = f"[{filename}]"
+    return Logger(prefix=prefix, level=level)
+
+
+__all__ = ["Logger", "get_logger"]

@@ -8,7 +8,7 @@ from pathlib import Path
 from .constants import DELEGATOR_SCRIPT_TEMPLATE, EXIT_SUCCESS, EXIT_FAILURE
 from .context import GitHookContext
 from .command import CommandExecutor
-from .logger import Logger
+from .logger import get_logger
 from .gateways.git_repository_gateway import GitRepositoryGateway
 from .gateways.module_import_gateway import ModuleImportGateway
 from .gateways.project_root_gateway import ProjectRootGateway
@@ -62,6 +62,10 @@ class GitHook(ABC):
         class_name = cls.__name__
         return module_name, class_name
 
+    @classmethod
+    def get_log_level(cls) -> int:
+        return logging.INFO
+
     @property
     @abstractmethod
     def hook_name(self) -> str: ...
@@ -70,13 +74,13 @@ class GitHook(ABC):
     def execute(self, context: GitHookContext) -> HookResult: ...
 
     def __init__(self, log_level: Optional[int] = None) -> None:
-        effective_log_level = log_level if log_level is not None else self.log_level
-        self.logger = Logger(prefix=f"[{self.hook_name}]", level=effective_log_level)
+        effective_log_level = (
+            log_level if log_level is not None else self.get_log_level()
+        )
+        self.logger = get_logger(
+            __file__, level=effective_log_level, prefix=f"[{self.hook_name}]"
+        )
         self.command_executor = CommandExecutor(logger=self.logger)
-
-    @property
-    def log_level(self) -> int:
-        return logging.INFO
 
     def run(self) -> int:
         try:

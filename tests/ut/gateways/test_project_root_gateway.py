@@ -1,7 +1,7 @@
 import unittest
 
 from githooklib.gateways.project_root_gateway import ProjectRootGateway
-from ..base_test_case import BaseTestCase
+from tests.base_test_case import BaseTestCase
 
 
 class TestProjectRootGateway(BaseTestCase):

@@ -9,7 +9,7 @@ from unittest.mock import patch
 from githooklib.__main__ import main
 from githooklib.gateways.project_root_gateway import ProjectRootGateway
 
-from .base_test_case import BaseTestCase
+from tests.base_test_case import BaseTestCase
 
 HELP_PATTERN = re.compile(
     r"NAME.*?SYNOPSIS.*?COMMANDS.*?(install|list|run|seed|show|uninstall)",

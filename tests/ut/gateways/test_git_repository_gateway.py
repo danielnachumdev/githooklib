@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from githooklib.gateways.git_repository_gateway import GitRepositoryGateway
-from ..base_test_case import BaseTestCase
+from tests.base_test_case import BaseTestCase
 
 
 class TestGitRepositoryGateway(BaseTestCase):

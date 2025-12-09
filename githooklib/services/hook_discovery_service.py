@@ -1,9 +1,14 @@
+import logging
+from collections import defaultdict
 from pathlib import Path
 from typing import Optional
 
 from ..git_hook import GitHook
 from ..gateways.project_root_gateway import ProjectRootGateway
 from ..gateways.module_import_gateway import ModuleImportGateway
+from ..logger import get_logger
+
+logger = get_logger(__file__, level=logging.DEBUG)
 
 
 class HookDiscoveryService:
@@ -26,12 +31,13 @@ class HookDiscoveryService:
         if self._hooks is not None:
             return self._hooks
         if not self.project_root:
+            logger.debug("No project root specified")
             return {}
 
+        print(__file__)
         self._import_all_hook_modules()
         hook_classes_by_name = self._collect_hook_classes_by_name()
         self._validate_no_duplicate_hooks(hook_classes_by_name)
-
         hooks = {name: classes[0] for name, classes in hook_classes_by_name.items()}
         self._hooks = hooks
         return hooks
@@ -66,20 +72,17 @@ class HookDiscoveryService:
 
     def _import_all_hook_modules(self) -> None:
         hook_modules = self.find_hook_modules()
-        base_dir = self.project_root or Path.cwd()
         for module_path in hook_modules:
-            self.module_import_gateway.import_module(module_path, base_dir)
+            self.module_import_gateway.import_module(module_path, self.project_root)
 
     @staticmethod
     def _collect_hook_classes_by_name() -> dict[str, list[type[GitHook]]]:
-        hook_classes_by_name: dict[str, list[type[GitHook]]] = {}
+        hook_classes_by_name: dict[str, list[type[GitHook]]] = defaultdict(list)
         for hook_class in GitHook.get_registered_hooks():
             instance = hook_class()
             hook_name = instance.hook_name
-            if hook_name not in hook_classes_by_name:
-                hook_classes_by_name[hook_name] = []
             hook_classes_by_name[hook_name].append(hook_class)
-        return hook_classes_by_name
+        return dict(hook_classes_by_name)
 
     def _validate_no_duplicate_hooks(
         self, hook_classes_by_name: dict[str, list[type[GitHook]]]

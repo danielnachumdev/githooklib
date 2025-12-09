@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from githooklib.gateways.module_import_gateway import ModuleImportGateway
-from ..base_test_case import BaseTestCase
+from tests.base_test_case import BaseTestCase
 
 
 class TestModuleImportGateway(BaseTestCase):
