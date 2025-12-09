@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
+from .logger import get_logger
 from .git_hook import GitHook
 from .gateways.project_root_gateway import ProjectRootGateway
 from .gateways.git_repository_gateway import GitRepositoryGateway
@@ -10,25 +11,19 @@ from .services.hook_management_service import HookManagementService
 from .services.error_message_service import ErrorMessageService
 from .services.hook_seeding_service import HookSeedingService
 
+logger = get_logger()
+
 
 class API:
     DEFAULT_HOOK_SEARCH_DIR = "githooks"
 
-    def __init__(
-        self,
-        project_root: Optional[Path] = None,
-        hook_search_paths: Optional[list[str]] = None,
-    ) -> None:
+    def __init__(self) -> None:
         project_root_gateway = ProjectRootGateway()
         git_repository_gateway = GitRepositoryGateway()
         module_import_gateway = ModuleImportGateway()
 
-        self.project_root = project_root or project_root_gateway.find_project_root()
-        if hook_search_paths is None:
-            self.hook_search_paths = [self.DEFAULT_HOOK_SEARCH_DIR]
-        else:
-            self.hook_search_paths = hook_search_paths
-
+        self.project_root = project_root_gateway.find_project_root()
+        self.hook_search_paths = [self.DEFAULT_HOOK_SEARCH_DIR]
         self.hook_discovery_service = HookDiscoveryService(
             project_root=self.project_root,
             hook_search_paths=self.hook_search_paths,
@@ -43,7 +38,8 @@ class API:
         self.git_repository_gateway = git_repository_gateway
 
     def discover_hooks(self) -> dict[str, type[GitHook]]:
-        return self.hook_discovery_service.discover_hooks()
+        hooks = self.hook_discovery_service.discover_hooks()
+        return hooks
 
     def list_hooks(self) -> list[str]:
         return self.hook_management_service.list_hooks()
@@ -64,7 +60,8 @@ class API:
         hooks_dir = git_root / ".git" / "hooks"
         if not hooks_dir.exists():
             return {}
-        return self.git_repository_gateway.get_installed_hooks(hooks_dir)
+        installed = self.git_repository_gateway.get_installed_hooks(hooks_dir)
+        return installed
 
     def get_git_root(self) -> Optional[Path]:
         return self.git_repository_gateway.find_git_root()

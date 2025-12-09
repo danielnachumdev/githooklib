@@ -6,6 +6,20 @@ import sys
 from unittest.mock import patch
 
 from githooklib import get_logger
+from githooklib.logger import TRACE
+
+logger = get_logger(display_name="githooks" if "githooks" in sys.argv[0] else "githooklib")
+
+
+def _setup_logging() -> None:
+    if "--trace" in sys.argv:
+        logger.setLevel(TRACE)
+        sys.argv.remove("--trace")
+    elif "--debug" in sys.argv:
+        logger.setLevel(logging.DEBUG)
+        sys.argv.remove("--debug")
+    else:
+        logger.setLevel(logging.INFO)
 
 if platform.system() != "Windows":
     os.environ["PAGER"] = "cat"
@@ -18,14 +32,11 @@ from .cli import CLI
 from .utils import FireGetResultMock
 
 
-def get_name() -> str:
-    exe = sys.argv[0]
-    return "githooks" if "githooks" in exe else "githooklib"
-
-
 def main() -> None:
-    logger = get_logger(__file__, level=logging.DEBUG)
-    logger.debug(f"Working in {os.getcwd()}")
+    _setup_logging()
+    logger.trace("platform: %s", platform.platform())
+    logger.trace("interpreter: %s", sys.executable)
+    logger.debug("CWD: %s", os.getcwd())
     original_function = fire.trace.FireTrace.GetResult
     mock_function = FireGetResultMock(original_function)
     try:

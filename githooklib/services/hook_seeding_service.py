@@ -1,8 +1,12 @@
+import logging
 import shutil
 from pathlib import Path
 from typing import Optional
 
 from ..gateways.project_root_gateway import ProjectRootGateway
+from ..logger import get_logger
+
+logger = get_logger()
 
 
 class HookSeedingService:
@@ -24,12 +28,14 @@ class HookSeedingService:
         example_files = [
             f.stem for f in examples_path.glob("*.py") if f.name != "__init__.py"
         ]
-        return sorted(example_files)
+        example_names = sorted(example_files)
+        return example_names
 
     def is_example_available(self, example_name: str) -> bool:
         examples_path = self.get_examples_path()
         source_file = examples_path / f"{example_name}.py"
-        return source_file.exists()
+        exists = source_file.exists()
+        return exists
 
     def get_target_hook_path(
         self, example_name: str, target_project_root: Optional[Path] = None
@@ -44,7 +50,8 @@ class HookSeedingService:
     def does_target_hook_exist(
         self, example_name: str, target_project_root: Optional[Path] = None
     ) -> bool:
-        target_path = self.get_target_hook_path(example_name, target_project_root)
+        target_path = self.get_target_hook_path(
+            example_name, target_project_root)
         return target_path is not None and target_path.exists()
 
     def seed_hook(
@@ -54,12 +61,15 @@ class HookSeedingService:
             target_project_root or self.project_root_gateway.find_project_root()
         )
         if not project_root:
+            logger.warning("Project root not found, cannot seed hook")
             return False
 
         if not self.is_example_available(example_name):
+            logger.warning("Example '%s' is not available", example_name)
             return False
 
         if self.does_target_hook_exist(example_name, target_project_root):
+            logger.warning("Target hook '%s' already exists", example_name)
             return False
 
         examples_path = self.get_examples_path()
@@ -69,6 +79,7 @@ class HookSeedingService:
         target_file = target_hooks_dir / f"{example_name}.py"
 
         shutil.copy2(source_file, target_file)
+        logger.info("Successfully seeded hook '%s' to %s", example_name, target_file)
         return True
 
 

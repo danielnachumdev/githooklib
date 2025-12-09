@@ -1,7 +1,53 @@
+import functools
+import inspect
 import logging
 import sys
-from pathlib import Path
+from types import FrameType
 from typing import IO, Optional
+import os
+
+TRACE = 5
+SUCCESS = logging.INFO - 1
+logging.addLevelName(TRACE, "TRACE")
+logging.addLevelName(SUCCESS, "SUCCESS")
+original_is_internal_frame = getattr(logging, "_is_internal_frame")
+
+
+def is_internal_frame(frame: FrameType) -> bool:
+    return (
+        original_is_internal_frame(frame)
+        or os.path.normcase(frame.f_code.co_filename).lower() == __file__.lower()
+    )
+
+
+setattr(logging, "_is_internal_frame", is_internal_frame)
+
+_DISPLAY_NAME_MAP: dict[str, str] = {}
+_ROOT_LOGGER_INITIALIZED = False
+
+
+class DisplayNameFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        display_name = _DISPLAY_NAME_MAP.get(record.name, "githooklib")
+        record.display_name = display_name
+        return super().format(record)
+
+
+def _get_root_logger() -> logging.Logger:
+    global _ROOT_LOGGER_INITIALIZED
+    root_logger = logging.root
+    if not _ROOT_LOGGER_INITIALIZED:
+        handler = StreamRouter(sys.stdout, sys.stderr)
+        formatter = DisplayNameFormatter(
+            "[%(display_name)s] %(levelname)-5s %(asctime)s %(filename)s:%(lineno)d | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler.setFormatter(formatter)
+        handler.setLevel(logging.INFO)
+        root_logger.addHandler(handler)
+        root_logger.setLevel(logging.INFO)
+        _ROOT_LOGGER_INITIALIZED = True
+    return root_logger
 
 
 class StreamRouter(logging.Handler):
@@ -14,7 +60,7 @@ class StreamRouter(logging.Handler):
         try:
             msg = self._format_message(record)
             self._write_to_stream(record, msg)
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
             self.handleError(record)
 
     def _format_message(self, record) -> str:
@@ -39,47 +85,53 @@ class StreamRouter(logging.Handler):
 
 
 class Logger(logging.Logger):
-    def __init__(self, prefix: str, level: int = logging.INFO) -> None:
-        unique_name = f"{prefix}_{id(self)}"
-        super().__init__(unique_name)
-        self.prefix = prefix
-        self.setLevel(level)
-        self.propagate = False
-        self._setup_handlers(level)
+    def __init__(self, name: str, display_name: str = "githooklib") -> None:
+        super().__init__(name)
+        self.display_name = display_name
+        self.propagate = True
+        _get_root_logger()
 
-    def set_level(self, level: int) -> None:
-        self.setLevel(level)
-        for handler in self.handlers:
+    def setLevel(self, level: int) -> None:
+        root_logger = _get_root_logger()
+        root_logger.setLevel(level)
+        for handler in root_logger.handlers:
             handler.setLevel(level)
 
-    def _setup_handlers(self, level: int = logging.INFO) -> None:
-        handler = self._create_handler(level)
-        self.addHandler(handler)
+    def success(self, message: str, *args, **kwargs) -> None:
+        if self.isEnabledFor(SUCCESS):
+            super()._log(SUCCESS, message, args, **kwargs)
 
-    def _create_handler(self, level: int) -> StreamRouter:
-        handler = StreamRouter(sys.stdout, sys.stderr)
-        formatter = self._create_formatter()
-        handler.setFormatter(formatter)
-        handler.setLevel(level)
-        return handler
-
-    def _create_formatter(self) -> logging.Formatter:
-        return logging.Formatter(
-            f"[{self.prefix} - %(levelname)-5s - %(asctime)s- %(filename)s:%(lineno)d] %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-
-    def success(self, message: str) -> None:
-        super().info(f"[V] %s", message)
+    def trace(self, message: str, *args, **kwargs) -> None:
+        if self.isEnabledFor(TRACE):
+            super()._log(TRACE, message, args, **kwargs)
 
 
-def get_logger(
-    file_path: str, level: int = logging.INFO, prefix: str = "githooklib"
-) -> Logger:
-    if prefix is None:
-        filename = Path(file_path).stem
-        prefix = f"[{filename}]"
-    return Logger(prefix=prefix, level=level)
+def get_logger(name: Optional[str] = None, display_name: str = "githooklib") -> Logger:
+    if name is None:
+        import inspect
+
+        frame = inspect.currentframe()
+        if frame and frame.f_back:
+            name = frame.f_back.f_globals.get("__name__", "githooklib")
+        else:
+            name = "githooklib"
+
+    manager = logging.Logger.manager
+    if name in manager.loggerDict:
+        existing_logger = manager.loggerDict[name]
+        if isinstance(existing_logger, Logger):
+            if hasattr(existing_logger, "display_name"):
+                existing_logger.display_name = display_name
+            _DISPLAY_NAME_MAP[name] = display_name
+            return existing_logger
+        else:
+            del manager.loggerDict[name]
+
+    logger = Logger(name, display_name)
+    _DISPLAY_NAME_MAP[name] = display_name
+    manager.loggerDict[name] = logger
+    manager._fixupParents(logger)
+    return logger
 
 
-__all__ = ["Logger", "get_logger"]
+__all__ = ["Logger", "get_logger", "TRACE", "SUCCESS"]

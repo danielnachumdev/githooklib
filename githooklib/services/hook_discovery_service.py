@@ -8,11 +8,27 @@ from ..gateways.project_root_gateway import ProjectRootGateway
 from ..gateways.module_import_gateway import ModuleImportGateway
 from ..logger import get_logger
 
-logger = get_logger(__file__, level=logging.DEBUG)
+logger = get_logger()
 
 
 class HookDiscoveryService:
     DEFAULT_HOOK_SEARCH_DIR = "githooks"
+
+    @staticmethod
+    def _collect_hook_classes_by_name() -> dict[str, list[type[GitHook]]]:
+        hook_classes_by_name: dict[str, list[type[GitHook]]] = defaultdict(list)
+        registered_hooks = GitHook.get_registered_hooks()
+        for hook_class in registered_hooks:
+            try:
+                instance = hook_class()
+            except Exception as e:
+                logger.error(
+                    "Failed to instantiate hook class %s: %s", hook_class.__name__, e
+                )
+                continue
+            hook_name = instance.hook_name
+            hook_classes_by_name[hook_name].append(hook_class)
+        return dict(hook_classes_by_name)
 
     def __init__(
         self,
@@ -31,10 +47,8 @@ class HookDiscoveryService:
         if self._hooks is not None:
             return self._hooks
         if not self.project_root:
-            logger.debug("No project root specified")
             return {}
 
-        print(__file__)
         self._import_all_hook_modules()
         hook_classes_by_name = self._collect_hook_classes_by_name()
         self._validate_no_duplicate_hooks(hook_classes_by_name)
@@ -75,15 +89,6 @@ class HookDiscoveryService:
         for module_path in hook_modules:
             self.module_import_gateway.import_module(module_path, self.project_root)
 
-    @staticmethod
-    def _collect_hook_classes_by_name() -> dict[str, list[type[GitHook]]]:
-        hook_classes_by_name: dict[str, list[type[GitHook]]] = defaultdict(list)
-        for hook_class in GitHook.get_registered_hooks():
-            instance = hook_class()
-            hook_name = instance.hook_name
-            hook_classes_by_name[hook_name].append(hook_class)
-        return dict(hook_classes_by_name)
-
     def _validate_no_duplicate_hooks(
         self, hook_classes_by_name: dict[str, list[type[GitHook]]]
     ) -> None:
@@ -93,6 +98,11 @@ class HookDiscoveryService:
             if len(classes) > 1
         }
         if duplicates:
+            logger.error(
+                "Found %d duplicate hook names: %s",
+                len(duplicates),
+                list(duplicates.keys()),
+            )
             self._raise_duplicate_hook_error(duplicates)
 
     def _raise_duplicate_hook_error(

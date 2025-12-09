@@ -1,10 +1,14 @@
 import functools
+import logging
 import sys
 from pathlib import Path
 from typing import Callable, Optional, ParamSpec
 
 from .api import API
 from .constants import EXIT_SUCCESS, EXIT_FAILURE
+from .logger import get_logger
+
+logger = get_logger()
 
 
 class CLI:
@@ -12,18 +16,15 @@ class CLI:
     def _print_error(message: str) -> None:
         print(f"Error: {message}", file=sys.stderr)
 
-    def __init__(
-        self,
-        project_root: Optional[Path] = None,
-        hook_search_paths: Optional[list[str]] = None,
-    ) -> None:
-        self._api = API(project_root=project_root, hook_search_paths=hook_search_paths)
+    def __init__(self) -> None:
+        self._api = API()
 
     def list(self) -> None:
         """List all available hooks in the project."""
         try:
             hook_names = self._api.list_hooks()
         except ValueError as e:
+            logger.error("Error listing hooks: %s", e)
             self._print_error(str(e))
             return
 
@@ -56,21 +57,24 @@ class CLI:
             source = "via tool" if installed_via_tool else "external"
             print(f"  - {hook_name} ({source})")
 
-    def run(self, hook_name: str, debug: bool = False) -> int:
+    def run(self, hook_name: str) -> int:
         """Run a hook manually for testing purposes.
 
         Args:
             hook_name: Name of the hook to run
-            debug: Enable debug logging
 
         Returns:
             Exit code (0 for success, 1 for failure)
         """
         try:
             if not self._hook_exists(hook_name):
+                logger.warning("Hook '%s' does not exist", hook_name)
                 return EXIT_FAILURE
-            return self._api.run_hook(hook_name, debug=debug)
+            hook_debug = "--debug" in sys.argv or "--trace" in sys.argv
+            exit_code = self._api.run_hook(hook_name, debug=hook_debug)
+            return exit_code
         except ValueError as e:
+            logger.error("Error running hook '%s': %s", hook_name, e)
             self._print_error(str(e))
             return EXIT_FAILURE
 
@@ -85,10 +89,16 @@ class CLI:
         """
         try:
             if not self._hook_exists(hook_name):
+                logger.warning("Hook '%s' does not exist, cannot install", hook_name)
                 return EXIT_FAILURE
             success = self._api.install_hook(hook_name)
+            if success:
+                logger.info("Successfully installed hook '%s'", hook_name)
+            else:
+                logger.warning("Failed to install hook '%s'", hook_name)
             return EXIT_SUCCESS if success else EXIT_FAILURE
         except ValueError as e:
+            logger.error("Error installing hook '%s': %s", hook_name, e)
             self._print_error(str(e))
             return EXIT_FAILURE
 
@@ -103,10 +113,16 @@ class CLI:
         """
         try:
             if not self._hook_exists(hook_name):
+                logger.warning("Hook '%s' does not exist, cannot uninstall", hook_name)
                 return EXIT_FAILURE
             success = self._api.uninstall_hook(hook_name)
+            if success:
+                logger.info("Successfully uninstalled hook '%s'", hook_name)
+            else:
+                logger.warning("Failed to uninstall hook '%s'", hook_name)
             return EXIT_SUCCESS if success else EXIT_FAILURE
         except ValueError as e:
+            logger.error("Error uninstalling hook '%s': %s", hook_name, e)
             self._print_error(str(e))
             return EXIT_FAILURE
 
@@ -147,16 +163,25 @@ class CLI:
         try:
             success = self._api.seed_hook(example_name)
             if success:
-                print(f"Successfully seeded example '{example_name}' to githooks/")
+                logger.info(
+                    "Successfully seeded example '%s' to githooks/", example_name
+                )
                 return EXIT_SUCCESS
+            logger.warning("Failed to seed example '%s'", example_name)
             return self._handle_seed_failure(example_name)
         except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.error("Error seeding example '%s': %s", example_name, e)
             self._print_error(f"Error seeding example: {e}")
             return EXIT_FAILURE
 
     def _handle_seed_failure(self, example_name: str) -> int:
         if not self._api.is_example_available(example_name):
             available_examples = self._api.get_available_examples()
+            logger.warning(
+                "Example '%s' not found. Available: %s",
+                example_name,
+                available_examples,
+            )
             self._print_error(
                 f"Example '{example_name}' not found. "
                 f"Available examples: {', '.join(available_examples)}"
@@ -165,17 +190,24 @@ class CLI:
 
         target_path = self._api.get_target_hook_path(example_name)
         if target_path is None:
+            logger.warning("Project root not found for example '%s'", example_name)
             self._print_error(
                 f"Failed to seed example '{example_name}'. " "Project root not found."
             )
             return EXIT_FAILURE
 
         if self._api.does_target_hook_exist(example_name):
+            logger.warning(
+                "Example '%s' already exists at %s", example_name, target_path
+            )
             self._print_error(
                 f"Example '{example_name}' already exists at {target_path}"
             )
             return EXIT_FAILURE
 
+        logger.warning(
+            "Failed to seed example '%s'. Project root not found.", example_name
+        )
         self._print_error(
             f"Failed to seed example '{example_name}'. Project root not found."
         )

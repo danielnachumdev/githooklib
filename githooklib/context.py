@@ -4,6 +4,9 @@ from pathlib import Path
 from typing import List, Optional
 
 from .gateways.project_root_gateway import ProjectRootGateway
+from .logger import get_logger
+
+logger = get_logger()
 
 
 @dataclass
@@ -17,16 +20,20 @@ class GitHookContext:
     def _read_stdin_lines() -> List[str]:
         if sys.stdin.isatty():
             return []
-        return sys.stdin.read().strip().split("\n")
+        lines = sys.stdin.read().strip().split("\n")
+        logger.trace("stdin=%s", lines)
+        return lines
 
     @classmethod
     def from_stdin(cls, hook_name: str) -> "GitHookContext":
         stdin_lines = cls._read_stdin_lines()
-        return cls(hook_name=hook_name, stdin_lines=stdin_lines)
+        context = cls(hook_name=hook_name, stdin_lines=stdin_lines)
+        return context
 
     @classmethod
     def empty(cls, hook_name: str) -> "GitHookContext":
-        return cls(hook_name=hook_name, stdin_lines=[])
+        context = cls(hook_name=hook_name, stdin_lines=[])
+        return context
 
     def __post_init__(self) -> None:
         if self.project_root is None:

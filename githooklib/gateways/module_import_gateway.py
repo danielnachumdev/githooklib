@@ -2,7 +2,9 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from .git_repository_gateway import GitRepositoryGateway
+from ..logger import get_logger
+
+logger = get_logger()
 
 
 class ModuleImportGateway:
@@ -23,7 +25,7 @@ class ModuleImportGateway:
                     except ValueError:
                         return spec.origin
                 return spec.origin
-        except (ImportError, AttributeError, ValueError):
+        except (ImportError, AttributeError, ValueError) as e:
             pass
         return None
 
@@ -38,6 +40,7 @@ class ModuleImportGateway:
             sys.path.insert(0, str(directory))
 
     def import_module(self, module_path: Path, base_dir: Path) -> None:
+        logger.trace("Importing module: %s", module_path)
         module_path = module_path.resolve()
         try:
             relative_path = module_path.relative_to(base_dir)
@@ -53,8 +56,8 @@ class ModuleImportGateway:
 
     def _import_absolute_module(self, module_path: Path) -> None:
         parent_dir = module_path.parent.resolve()
-        self._add_to_sys_path_if_needed(parent_dir)
         module_name = module_path.stem
+        self._add_to_sys_path_if_needed(parent_dir)
         __import__(module_name)
 
 

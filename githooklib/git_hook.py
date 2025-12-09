@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Optional, List, Type, Tuple
 import traceback
 import logging
@@ -9,25 +8,8 @@ from .constants import DELEGATOR_SCRIPT_TEMPLATE, EXIT_SUCCESS, EXIT_FAILURE
 from .context import GitHookContext
 from .command import CommandExecutor
 from .logger import get_logger
-from .gateways.git_repository_gateway import GitRepositoryGateway
-from .gateways.module_import_gateway import ModuleImportGateway
-from .gateways.project_root_gateway import ProjectRootGateway
-
-
-@dataclass
-class HookResult:
-    success: bool
-    message: Optional[str] = None
-    exit_code: int = EXIT_SUCCESS
-
-    def __post_init__(self) -> None:
-        if self.exit_code == EXIT_SUCCESS and not self.success:
-            self.exit_code = EXIT_FAILURE
-        elif self.exit_code != EXIT_SUCCESS and self.success:
-            self.exit_code = EXIT_SUCCESS
-
-    def __bool__(self) -> bool:
-        return self.success
+from .gateways import GitRepositoryGateway, ModuleImportGateway, ProjectRootGateway
+from .definitions import HookResult
 
 
 class GitHook(ABC):
@@ -73,14 +55,8 @@ class GitHook(ABC):
     @abstractmethod
     def execute(self, context: GitHookContext) -> HookResult: ...
 
-    def __init__(self, log_level: Optional[int] = None) -> None:
-        effective_log_level = (
-            log_level if log_level is not None else self.get_log_level()
-        )
-        self.logger = get_logger(
-            __file__, level=effective_log_level, prefix=f"[{self.hook_name}]"
-        )
-        self.command_executor = CommandExecutor(logger=self.logger)
+    def __init__(self) -> None:
+        self.command_executor = CommandExecutor()
 
     def run(self) -> int:
         try:
@@ -92,17 +68,18 @@ class GitHook(ABC):
             return EXIT_FAILURE
 
     def _handle_error(self, error: Exception) -> None:
-        self.logger.error(f"Unexpected error in hook: {error}")
+        self.logger.error("Unexpected error in hook: %s", error)
         self.logger.error(traceback.format_exc())
 
     def install(self) -> bool:
         hooks_dir = self._validate_installation_prerequisites()
         if not hooks_dir:
+            self.logger.warning("Installation prerequisites validation failed")
             return False
         module_name, class_name = self._get_module_and_class()
         project_root = ProjectRootGateway.find_project_root()
         if not project_root:
-            self.logger.error(f"Could not find project root containing {module_name}")
+            self.logger.error("Could not find project root containing %s", module_name)
             return False
         hook_script_path = hooks_dir / self.hook_name
         script_content = self._generate_delegator_script(module_name, class_name)
@@ -115,7 +92,7 @@ class GitHook(ABC):
             return None
         hooks_dir = git_root / "hooks"
         if not hooks_dir.exists():
-            self.logger.error(f"Hooks directory not found: {hooks_dir}")
+            self.logger.error("Hooks directory not found: %s", hooks_dir)
             return None
         return hooks_dir
 
@@ -126,14 +103,14 @@ class GitHook(ABC):
             return False
         hook_script_path = git_root / ".git" / "hooks" / self.hook_name
         if not hook_script_path.exists():
-            self.logger.warning(f"Hook script not found: {hook_script_path}")
+            self.logger.warning("Hook script not found: %s", hook_script_path)
             return False
         try:
             hook_script_path.unlink()
-            self.logger.success(f"Uninstalled hook: {self.hook_name}")
+            self.logger.success("Uninstalled hook: %s", self.hook_name)
             return True
         except Exception as e:  # pylint: disable=broad-exception-caught
-            self.logger.error(f"Failed to uninstall hook: {e}")
+            self.logger.error("Failed to uninstall hook: %s", e)
             return False
 
     def _log_project_root_not_found(self, module_name: str) -> None:
@@ -143,11 +120,16 @@ class GitHook(ABC):
         current = Path.cwd()
         searched_paths = [current] + list(current.parents)
         full_module_path = current.resolve() / module_file_path
+        searched_dirs = ", ".join(str(p.resolve()) for p in searched_paths)
         self.logger.error(
-            f"Could not find project root containing {module_name}. "
-            f"Checked for module file at: {full_module_path} "
-            f"(resolved from CWD: {current.resolve()}). "
-            f"Searched in directories: {', '.join(str(p.resolve()) for p in searched_paths)}"
+            "Could not find project root containing %s. "
+            "Checked for module file at: %s "
+            "(resolved from CWD: %s). "
+            "Searched in directories: %s",
+            module_name,
+            full_module_path,
+            current.resolve(),
+            searched_dirs,
         )
 
     def _write_hook_delegation_script(
@@ -156,10 +138,10 @@ class GitHook(ABC):
         try:
             self._write_script_file(hook_script_path, script_content)
             self._make_script_executable(hook_script_path)
-            self.logger.success(f"Installed hook: {self.hook_name}")
+            self.logger.success("Installed hook: %s", self.hook_name)
             return True
         except Exception as e:  # pylint: disable=broad-exception-caught
-            self.logger.error(f"Failed to install hook: {e}")
+            self.logger.error("Failed to install hook: %s", e)
             return False
 
 

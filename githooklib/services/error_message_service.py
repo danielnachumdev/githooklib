@@ -1,6 +1,9 @@
 from pathlib import Path
 
+from ..logger import get_logger
 from .hook_discovery_service import HookDiscoveryService
+
+logger = get_logger()
 
 
 class ErrorMessageService:
@@ -33,7 +36,8 @@ class ErrorMessageService:
         self._add_project_root_search_info(error_lines)
         self._add_hook_search_paths_info(error_lines)
 
-        return "\n".join(error_lines)
+        error_message = "\n".join(error_lines)
+        return error_message
 
     def _add_project_root_search_info(self, error_lines: list[str]) -> None:
         project_root = self.hook_discovery_service.project_root

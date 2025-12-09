@@ -2,12 +2,20 @@ import subprocess
 from pathlib import Path
 from typing import Optional, Dict
 
+from ..logger import get_logger
+
+logger = get_logger()
+
 
 class GitRepositoryGateway:
     @staticmethod
     def find_git_root() -> Optional[Path]:
-        git_root = GitRepositoryGateway._find_git_root_via_command()
-        return git_root or GitRepositoryGateway._find_git_root_via_filesystem()
+        result = (
+            GitRepositoryGateway._find_git_root_via_command()
+            or GitRepositoryGateway._find_git_root_via_filesystem()
+        )
+        logger.trace("git root: %s", result)
+        return result
 
     @staticmethod
     def _find_git_root_via_command() -> Optional[Path]:
@@ -20,9 +28,10 @@ class GitRepositoryGateway:
             )
             git_root = Path(result.stdout.strip()).resolve()
             if (git_root / ".git").exists():
-                return git_root / ".git"
+                git_dir = git_root / ".git"
+                return git_dir
             return None
-        except (subprocess.CalledProcessError, FileNotFoundError):
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
             return None
 
     @staticmethod
@@ -30,7 +39,8 @@ class GitRepositoryGateway:
         current = Path.cwd()
         for path in [current] + list(current.parents):
             if (path / ".git").exists():
-                return path.resolve()
+                resolved = path.resolve()
+                return resolved
         return None
 
     def get_installed_hooks(self, hooks_dir: Path) -> Dict[str, bool]:
@@ -46,8 +56,9 @@ class GitRepositoryGateway:
     def _is_hook_from_githooklib(hook_path: Path) -> bool:
         try:
             content = hook_path.read_text()
-            return "githooklib" in content and "find_project_root" in content
-        except (OSError, IOError, UnicodeDecodeError):
+            is_from_tool = "githooklib" in content and "find_project_root" in content
+            return is_from_tool
+        except (OSError, IOError, UnicodeDecodeError) as e:
             return False
 
     @staticmethod
