@@ -26,7 +26,7 @@ class HookDiscoveryService:
                     "Failed to instantiate hook class %s: %s", hook_class.__name__, e
                 )
                 continue
-            hook_name = instance.hook_name
+            hook_name = instance.get_hook_name
             hook_classes_by_name[hook_name].append(hook_class)
         return dict(hook_classes_by_name)
 

@@ -93,11 +93,11 @@ class CLI:
                 return EXIT_FAILURE
             success = self._api.install_hook(hook_name)
             if success:
-                logger.info("Successfully installed hook '%s'", hook_name)
+                logger.success("Installed hook '%s'", hook_name)
             else:
                 logger.warning("Failed to install hook '%s'", hook_name)
             return EXIT_SUCCESS if success else EXIT_FAILURE
-        except ValueError as e:
+        except Exception as e:
             logger.error("Error installing hook '%s': %s", hook_name, e)
             self._print_error(str(e))
             return EXIT_FAILURE

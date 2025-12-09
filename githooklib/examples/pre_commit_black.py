@@ -31,8 +31,8 @@ def _stage_files(command_executor: CommandExecutor, files: list[str]) -> Command
 
 
 class BlackFormatterPreCommit(GitHook):
-    @property
-    def hook_name(self) -> str:
+    @classmethod
+    def get_hook_name(cls) -> str:
         return "pre-commit"
 
     def __init__(

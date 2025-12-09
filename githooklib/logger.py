@@ -10,12 +10,13 @@ TRACE = 5
 SUCCESS = logging.INFO - 1
 logging.addLevelName(TRACE, "TRACE")
 logging.addLevelName(SUCCESS, "SUCCESS")
-original_is_internal_frame = getattr(logging, "_is_internal_frame")
 
 
 def is_internal_frame(frame: FrameType) -> bool:
+    filename = os.path.normcase(frame.f_code.co_filename)
     return (
-        original_is_internal_frame(frame)
+        filename.endswith("logging\\__init__.py")
+        or ("importlib" in filename and "_bootstrap" in filename)
         or os.path.normcase(frame.f_code.co_filename).lower() == __file__.lower()
     )
 

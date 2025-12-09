@@ -7,8 +7,8 @@ logger = get_logger(__name__, "pre-push")
 
 
 class PrePush(GitHook):
-    @property
-    def hook_name(self) -> str:
+    @classmethod
+    def get_hook_name(cls) -> str:
         return "pre-push"
 
     def execute(self, context: GitHookContext) -> HookResult:

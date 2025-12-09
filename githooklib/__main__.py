@@ -8,7 +8,7 @@ from unittest.mock import patch
 from githooklib import get_logger
 from githooklib.logger import TRACE
 
-logger = get_logger(display_name="githooks" if "githooks" in sys.argv[0] else "githooklib")
+logger = get_logger(__name__)
 
 
 def _setup_logging() -> None:

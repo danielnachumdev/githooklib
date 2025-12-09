@@ -19,8 +19,8 @@ class TestPreCommit(unittest.TestCase):
     def test_print(self):
 
         class PreCommit(GitHook):
-            @property
-            def hook_name(self) -> str:
+            @classmethod
+            def get_hook_name(cls) -> str:
                 return "pre-commit"
 
             def execute(self, context: GitHookContext) -> HookResult:
