@@ -1,5 +1,9 @@
-from githooklib import GitHook, GitHookContext, HookResult
-from .steps.run_mypy_type_check import run_mypy_type_check
+import sys
+
+from githooklib import GitHook, GitHookContext, HookResult, get_logger
+from githooks.steps import run_mypy_type_check
+
+logger = get_logger(__name__, "pre-push")
 
 
 class PrePush(GitHook):
@@ -8,7 +12,7 @@ class PrePush(GitHook):
         return "pre-push"
 
     def execute(self, context: GitHookContext) -> HookResult:
-        mypy_result = run_mypy_type_check(self.logger, self.command_executor)
+        mypy_result = run_mypy_type_check(logger, self.command_executor)
         if not mypy_result.success:
             return mypy_result
 
@@ -16,3 +20,6 @@ class PrePush(GitHook):
 
 
 __all__ = ["PrePush"]
+
+if __name__ == "__main__":
+    sys.exit(PrePush().run())
