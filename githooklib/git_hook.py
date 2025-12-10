@@ -25,11 +25,10 @@ class GitHook(ABC):
     def _make_script_executable(hook_script_path: Path) -> None:
         hook_script_path.chmod(0o755)
 
-    @staticmethod
-    def _generate_delegator_script() -> str:
+    def _generate_delegator_script(self) -> str:
         return DELEGATOR_SCRIPT_TEMPLATE.format(
             hook_name=self.get_hook_name(),
-            project_root=str(ProjectRootGateway.get_project_root()),
+            project_root=str(ProjectRootGateway.find_project_root()),
             python_executable=sys.executable,
         )
 
@@ -143,7 +142,6 @@ class GitHook(ABC):
         try:
             self._write_script_file(hook_script_path, script_content)
             self._make_script_executable(hook_script_path)
-            self.logger.success("Installed hook: %s", self.get_hook_name)
             return True
         except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error("Failed to install hook: %s", e)

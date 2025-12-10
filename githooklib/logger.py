@@ -1,5 +1,3 @@
-import functools
-import inspect
 import logging
 import sys
 from types import FrameType
@@ -7,7 +5,7 @@ from typing import IO, Optional
 import os
 
 TRACE = 5
-SUCCESS = logging.INFO - 1
+SUCCESS = logging.INFO + 1
 logging.addLevelName(TRACE, "TRACE")
 logging.addLevelName(SUCCESS, "SUCCESS")
 

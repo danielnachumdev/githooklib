@@ -38,8 +38,7 @@ class API:
         self.git_repository_gateway = git_repository_gateway
 
     def discover_hooks(self) -> dict[str, type[GitHook]]:
-        hooks = self.hook_discovery_service.discover_hooks()
-        return hooks
+        return self.hook_discovery_service.discover_hooks()
 
     def list_hooks(self) -> list[str]:
         return self.hook_management_service.list_hooks()
