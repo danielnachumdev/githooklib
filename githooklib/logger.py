@@ -55,9 +55,6 @@ class StreamRouter(logging.Handler):
         self.stdout = stdout
         self.stderr = stderr
 
-    def filter(self, record: logging.LogRecord) -> bool:
-        return super().filter(record)
-
     def emit(self, record) -> None:
         try:
             msg = self._format_message(record)
