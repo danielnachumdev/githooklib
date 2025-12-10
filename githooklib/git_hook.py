@@ -26,10 +26,12 @@ class GitHook(ABC):
         hook_script_path.chmod(0o755)
 
     def _generate_delegator_script(self) -> str:
+        project_root = str(ProjectRootGateway.find_project_root())
+        python_executable = sys.executable
         return DELEGATOR_SCRIPT_TEMPLATE.format(
             hook_name=self.get_hook_name(),
-            project_root=str(ProjectRootGateway.find_project_root()),
-            python_executable=sys.executable,
+            project_root=project_root.replace("\\", "\\\\"),
+            python_executable=python_executable.replace("\\", "\\\\"),
         )
 
     @classmethod
