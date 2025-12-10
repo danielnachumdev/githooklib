@@ -55,6 +55,9 @@ class StreamRouter(logging.Handler):
         self.stdout = stdout
         self.stderr = stderr
 
+    def filter(self, record: logging.LogRecord) -> bool:
+        return super().filter(record)
+
     def emit(self, record) -> None:
         try:
             msg = self._format_message(record)
@@ -89,6 +92,7 @@ class Logger(logging.Logger):
         self.display_name = display_name
         self.propagate = True
         _get_root_logger()
+
 
     def setLevel(self, level: Union[int, str]) -> None:
         root_logger = _get_root_logger()
@@ -129,7 +133,7 @@ def get_logger(name: Optional[str] = None, display_name: str = "githooklib") -> 
     logger = Logger(name, display_name)
     _DISPLAY_NAME_MAP[name] = display_name
     manager.loggerDict[name] = logger
-    # manager._fixupParents(logger)
+    manager._fixupParents(logger)  # type: ignore[attr-defined]
     return logger
 
 
