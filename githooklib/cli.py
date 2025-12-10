@@ -1,8 +1,5 @@
-import functools
-import logging
 import sys
-from pathlib import Path
-from typing import Callable, Optional, ParamSpec
+from typing import Optional
 
 from .api import API
 from .constants import EXIT_SUCCESS, EXIT_FAILURE
@@ -70,9 +67,7 @@ class CLI:
             if not self._hook_exists(hook_name):
                 logger.warning("Hook '%s' does not exist", hook_name)
                 return EXIT_FAILURE
-            hook_debug = "--debug" in sys.argv or "--trace" in sys.argv
-            exit_code = self._api.run_hook(hook_name, debug=hook_debug)
-            return exit_code
+            return self._api.run_hook(hook_name)
         except ValueError as e:
             logger.error("Error running hook '%s': %s", hook_name, e)
             self._print_error(str(e))

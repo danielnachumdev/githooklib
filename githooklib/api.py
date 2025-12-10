@@ -49,8 +49,8 @@ class API:
     def uninstall_hook(self, hook_name: str) -> bool:
         return self.hook_management_service.uninstall_hook(hook_name)
 
-    def run_hook(self, hook_name: str, debug: bool = False) -> int:
-        return self.hook_management_service.run_hook(hook_name, debug=debug)
+    def run_hook(self, hook_name: str) -> int:
+        return self.hook_management_service.run_hook(hook_name)
 
     def get_installed_hooks(self) -> dict[str, bool]:
         git_root = self.git_repository_gateway.find_git_root()

@@ -35,16 +35,14 @@ class HookManagementService:
         success = hook.uninstall()
         return success
 
-    def run_hook(self, hook_name: str, debug: bool = False) -> int:
+    def run_hook(self, hook_name: str) -> int:
         hooks = self.hook_discovery_service.discover_hooks()
         if hook_name not in hooks:
             logger.warning("Hook '%s' not found in discovered hooks", hook_name)
             return EXIT_FAILURE
         hook_class = hooks[hook_name]
-        log_level = logging.DEBUG if debug else logging.INFO
-        hook = hook_class(log_level=log_level)
-        exit_code = hook.run()
-        return exit_code
+        hook = hook_class()
+        return hook.run()
 
 
 __all__ = ["HookManagementService"]
