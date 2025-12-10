@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, List, Type, Tuple
 import traceback
 import logging
+import sys
 from pathlib import Path
 
 from .constants import DELEGATOR_SCRIPT_TEMPLATE, EXIT_SUCCESS, EXIT_FAILURE
@@ -25,9 +26,11 @@ class GitHook(ABC):
         hook_script_path.chmod(0o755)
 
     @staticmethod
-    def _generate_delegator_script(module_name: str, class_name: str) -> str:
+    def _generate_delegator_script() -> str:
         return DELEGATOR_SCRIPT_TEMPLATE.format(
-            module_name=module_name, class_name=class_name
+            hook_name=self.get_hook_name(),
+            project_root=str(ProjectRootGateway.get_project_root()),
+            python_executable=sys.executable,
         )
 
     @classmethod
@@ -78,13 +81,13 @@ class GitHook(ABC):
         if not hooks_dir:
             self.logger.warning("Installation prerequisites validation failed")
             return False
-        module_name, class_name = self._get_module_and_class()
+        hook_name = self.get_hook_name()
         project_root = ProjectRootGateway.find_project_root()
         if not project_root:
-            self.logger.error("Could not find project root containing %s", module_name)
+            self.logger.error("Could not find project root")
             return False
-        hook_script_path = hooks_dir / self.get_hook_name
-        script_content = self._generate_delegator_script(module_name, class_name)
+        hook_script_path = hooks_dir / hook_name
+        script_content = self._generate_delegator_script()
         return self._write_hook_delegation_script(hook_script_path, script_content)
 
     def _validate_installation_prerequisites(self) -> Optional[Path]:
@@ -103,13 +106,13 @@ class GitHook(ABC):
         if not git_root:
             self.logger.error("Not a git repository")
             return False
-        hook_script_path = git_root / ".git" / "hooks" / self.get_hook_name
+        hook_script_path = git_root / ".git" / "hooks" / self.get_hook_name()
         if not hook_script_path.exists():
             self.logger.warning("Hook script not found: %s", hook_script_path)
             return False
         try:
             hook_script_path.unlink()
-            self.logger.success("Uninstalled hook: %s", self.get_hook_name)
+            self.logger.success("Uninstalled hook: %s", self.get_hook_name())
             return True
         except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error("Failed to uninstall hook: %s", e)
