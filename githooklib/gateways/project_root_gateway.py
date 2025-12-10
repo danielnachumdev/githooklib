@@ -1,9 +1,8 @@
 from pathlib import Path
-from typing import Optional
 
 from ..exceptions import GitHookLibException
 from ..logger import get_logger
-from .git_repository_gateway import GitRepositoryGateway
+from .git_gateway import GitGateway
 
 logger = get_logger()
 
@@ -11,7 +10,7 @@ logger = get_logger()
 class ProjectRootGateway:
     @staticmethod
     def find_project_root() -> Path:
-        git = GitRepositoryGateway.find_git_root()
+        git = GitGateway.get_git_root_path()
         if not git:
             logger.error("Could not find git repository")
             raise GitHookLibException("Could not find git repository")

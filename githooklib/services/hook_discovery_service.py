@@ -1,8 +1,8 @@
-import logging
 from collections import defaultdict
 from pathlib import Path
 from typing import Optional
 
+from ..constants import DEFAULT_HOOK_SEARCH_DIR
 from ..git_hook import GitHook
 from ..gateways.project_root_gateway import ProjectRootGateway
 from ..gateways.module_import_gateway import ModuleImportGateway
@@ -30,14 +30,10 @@ class HookDiscoveryService:
             hook_classes_by_name[hook_name].append(hook_class)
         return dict(hook_classes_by_name)
 
-    def __init__(
-        self,
-        hook_search_paths: list[str],
-        module_import_gateway: ModuleImportGateway,
-    ) -> None:
+    def __init__(self) -> None:
         self.project_root = ProjectRootGateway.find_project_root()
-        self.hook_search_paths = hook_search_paths
-        self.module_import_gateway = module_import_gateway
+        self.hook_search_paths = [DEFAULT_HOOK_SEARCH_DIR]
+        self.module_import_gateway = ModuleImportGateway()
         self._hooks: Optional[dict[str, type[GitHook]]] = None
 
     def discover_hooks(self) -> dict[str, type[GitHook]]:

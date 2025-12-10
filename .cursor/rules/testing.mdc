@@ -79,7 +79,7 @@ class TestGitRepositoryGateway(BaseTestCase):
         self.gateway = GitRepositoryGateway()
 
     def test_find_git_root_ends_with_githooklib(self):
-        result = GitRepositoryGateway.find_git_root()
+        result = GitRepositoryGateway.get_git_root_path()
         result = self.unwrap_optional(result)
         self.assertEqual("githooklib", result.name)
         self.assertTrue((result / ".git").exists())

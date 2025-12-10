@@ -1,6 +1,8 @@
 EXIT_SUCCESS: int = 0
 EXIT_FAILURE: int = 1
-
+EXAMPLES_DIR: str = "examples"
+TARGET_HOOKS_DIR: str = "githooks"
+DEFAULT_HOOK_SEARCH_DIR = "githooks"
 DELEGATOR_SCRIPT_TEMPLATE: str = """#!/usr/bin/env python3
 
 import subprocess

@@ -9,7 +9,7 @@ from .constants import DELEGATOR_SCRIPT_TEMPLATE, EXIT_SUCCESS, EXIT_FAILURE
 from .context import GitHookContext
 from .command import CommandExecutor
 from .logger import get_logger, Logger
-from .gateways import GitRepositoryGateway, ModuleImportGateway, ProjectRootGateway
+from .gateways import GitGateway, ModuleImportGateway, ProjectRootGateway
 from .definitions import HookResult
 
 
@@ -67,7 +67,7 @@ class GitHook(ABC):
     def run(self) -> int:
         hook_name = self.get_hook_name()
         self.logger.info(
-            "You can run this hook manually using: githooks run %s with optional flags --debug --trace to see more information",
+            "You can run this hook manually using: githooks run %s with optional flags --debug or --trace to see more information",
             hook_name,
         )
         try:
@@ -97,7 +97,7 @@ class GitHook(ABC):
         return self._write_hook_delegation_script(hook_script_path, script_content)
 
     def _validate_installation_prerequisites(self) -> Optional[Path]:
-        git_root = GitRepositoryGateway.find_git_root()
+        git_root = GitGateway.get_git_root_path()
         if not git_root:
             self.logger.error("Not a git repository")
             return None
@@ -108,7 +108,7 @@ class GitHook(ABC):
         return hooks_dir
 
     def uninstall(self) -> bool:
-        git_root = GitRepositoryGateway.find_git_root()
+        git_root = GitGateway.get_git_root_path()
         if not git_root:
             self.logger.error("Not a git repository")
             return False

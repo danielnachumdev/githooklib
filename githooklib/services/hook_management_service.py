@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 from ..constants import EXIT_FAILURE
-from ..gateways.git_repository_gateway import GitRepositoryGateway
+from ..gateways.git_gateway import GitGateway
 from ..logger import get_logger
 from .hook_discovery_service import HookDiscoveryService
 
@@ -19,13 +19,9 @@ class InstalledHooksContext:
 
 
 class HookManagementService:
-    def __init__(
-        self,
-        hook_discovery_service: HookDiscoveryService,
-        git_repository_gateway: Optional[GitRepositoryGateway] = None,
-    ) -> None:
-        self.hook_discovery_service = hook_discovery_service
-        self.git_repository_gateway = git_repository_gateway
+    def __init__(self) -> None:
+        self.hook_discovery_service = HookDiscoveryService()
+        self.git_gateway = GitGateway()
 
     def list_hooks(self) -> list[str]:
         hooks = self.hook_discovery_service.discover_hooks()
@@ -62,10 +58,10 @@ class HookManagementService:
         return hook.run()
 
     def get_installed_hooks_with_context(self) -> InstalledHooksContext:
-        if not self.git_repository_gateway:
+        if not self.git_gateway:
             return InstalledHooksContext({}, None, False)
 
-        git_root = self.git_repository_gateway.find_git_root()
+        git_root = self.git_gateway.get_git_root_path()
         if not git_root:
             return InstalledHooksContext({}, None, False)
 
@@ -75,7 +71,7 @@ class HookManagementService:
         if not hooks_dir_exists:
             return InstalledHooksContext({}, git_root, False)
 
-        installed_hooks = self.git_repository_gateway.get_installed_hooks(hooks_dir)
+        installed_hooks = self.git_gateway.get_installed_hooks(hooks_dir)
         return InstalledHooksContext(installed_hooks, git_root, True)
 
 

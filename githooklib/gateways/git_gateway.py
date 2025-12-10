@@ -7,12 +7,12 @@ from ..logger import get_logger
 logger = get_logger()
 
 
-class GitRepositoryGateway:
+class GitGateway:
     @staticmethod
-    def find_git_root() -> Optional[Path]:
+    def get_git_root_path() -> Optional[Path]:
         result = (
-            GitRepositoryGateway._find_git_root_via_command()
-            or GitRepositoryGateway._find_git_root_via_filesystem()
+            GitGateway._find_git_root_via_command()
+            or GitGateway._find_git_root_via_filesystem()
         )
         logger.trace("git root: %s", result)
         return result
@@ -61,9 +61,5 @@ class GitRepositoryGateway:
         except (OSError, IOError, UnicodeDecodeError) as e:
             return False
 
-    @staticmethod
-    def is_git_root(path: Path) -> bool:
-        return (path / ".git").exists()
 
-
-__all__ = ["GitRepositoryGateway"]
+__all__ = ["GitGateway"]

@@ -46,10 +46,15 @@ class OperationsBaseTestCase(BaseTestCase):
         success: bool = True,
         exit_code: int = 0,
         cwd: Optional[Path] = PathUtils.get_project_root(),
+        stdin: Optional[str] = None,
     ) -> CommandResult:
-        result = self.executor.run([sys.executable, "-m", "githooklib"] + cmd, cwd=cwd)
+        result = self.executor.run(
+            [sys.executable, "-m", "githooklib"] + cmd, cwd=cwd, stdin=stdin
+        )
         self.assertEqual(
-            success, result.success, "Expected command to succeed, but failed"
+            success,
+            result.success,
+            f"Expected command to succeed, but failed with\nstdout: {result.stdout}\nstderr: {result.stderr}",
         )
         self.assertEqual(exit_code, result.exit_code)
         self.logger.debug("STDOUT: " + result.stdout)

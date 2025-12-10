@@ -1,56 +1,19 @@
 import shutil
-from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
+from ..definitions import SeedFailureDetails
+from ..constants import TARGET_HOOKS_DIR
+from ..gateways.seed_gateway import SeedGateway
 from ..logger import get_logger
 
 logger = get_logger()
-
-EXAMPLES_DIR = "examples"
-TARGET_HOOKS_DIR = "githooks"
-
-
-@dataclass
-class SeedFailureDetails:
-    example_not_found: bool
-    project_root_not_found: bool
-    target_hook_already_exists: bool
-    target_hook_path: Optional[Path]
-    available_examples: List[str]
-
-
-class ExamplesGateway:
-
-    def _get_githooklib_path(self) -> Path:
-        return Path(__file__).parent.parent
-
-    def _get_examples_folder_path(self) -> Path:
-        return self._get_githooklib_path() / EXAMPLES_DIR
-
-    def get_available_examples(self) -> List[str]:
-        examples_path = self._get_examples_folder_path()
-        if not examples_path.exists():
-            return []
-
-        example_files = [
-            f.stem for f in examples_path.glob("*.py") if f.name != "__init__.py"
-        ]
-        return sorted(example_files)
-
-    def is_example_available(self, example_name: str) -> bool:
-        examples_path = self._get_examples_folder_path()
-        source_file = examples_path / f"{example_name}.py"
-        return source_file.exists()
-
-    def get_example_path(self, example_name: str) -> Path:
-        return self._get_examples_folder_path() / f"{example_name}.py"
 
 
 class HookSeedingService:
 
     def __init__(self) -> None:
-        self.examples_gateway = ExamplesGateway()
+        self.examples_gateway = SeedGateway()
 
     def get_target_hook_path(self, example_name: str, project_root: Path) -> Path:
         return project_root / TARGET_HOOKS_DIR / f"{example_name}.py"
@@ -102,4 +65,4 @@ class HookSeedingService:
         )
 
 
-__all__ = ["HookSeedingService", "ExamplesGateway", "SeedFailureDetails"]
+__all__ = ["HookSeedingService", "SeedGateway", "SeedFailureDetails"]

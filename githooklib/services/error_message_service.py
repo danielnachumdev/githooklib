@@ -26,8 +26,8 @@ class ErrorMessageService:
         else:
             error_lines.append(f"  - {search_dir} (no .py files found)")
 
-    def __init__(self, hook_discovery_service: HookDiscoveryService) -> None:
-        self.hook_discovery_service = hook_discovery_service
+    def __init__(self) -> None:
+        self.hook_discovery_service = HookDiscoveryService()
 
     def get_hook_not_found_error_message(self, hook_name: str) -> str:
         error_lines = [f"Error: Hook '{hook_name}' not found"]

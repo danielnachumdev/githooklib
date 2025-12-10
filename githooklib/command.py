@@ -20,11 +20,12 @@ class CommandExecutor:
         check: bool = False,
         text: bool = True,
         shell: bool = False,
+        stdin: Optional[str] = None,
     ) -> CommandResult:
         cmd_list = self._normalize_command(command, shell)
         normalized_cwd = self._normalize_cwd(cwd)
         result = self._execute_command(
-            cmd_list, normalized_cwd, capture_output, check, text, shell
+            cmd_list, normalized_cwd, capture_output, check, text, shell, stdin
         )
         return result
 
@@ -48,10 +49,11 @@ class CommandExecutor:
         check: bool,
         text: bool,
         shell: bool,
+        stdin: Optional[str] = None,
     ) -> CommandResult:
         try:
             return self._run_subprocess(
-                cmd_list, cwd, capture_output, check, text, shell
+                cmd_list, cwd, capture_output, check, text, shell, stdin
             )
         except subprocess.CalledProcessError as e:
             logger.warning("Command failed with CalledProcessError: %s", e)
@@ -71,6 +73,7 @@ class CommandExecutor:
         check: bool,
         text: bool,
         shell: bool,
+        stdin: Optional[str] = None,
     ) -> CommandResult:
         result = subprocess.run(
             cmd_list,
@@ -79,6 +82,7 @@ class CommandExecutor:
             check=check,
             text=text,
             shell=shell,
+            input=stdin or "",
         )
         return CommandResultFactory.create_success_result(
             result, cmd_list, capture_output

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pathlib import Path
 from typing import List, Optional
 from .constants import EXIT_SUCCESS, EXIT_FAILURE
 
@@ -31,7 +32,17 @@ class HookResult:
         return self.success
 
 
+@dataclass
+class SeedFailureDetails:
+    example_not_found: bool
+    project_root_not_found: bool
+    target_hook_already_exists: bool
+    target_hook_path: Optional[Path]
+    available_examples: List[str]
+
+
 __all__ = [
     "CommandResult",
     "HookResult",
+    "SeedFailureDetails",
 ]
