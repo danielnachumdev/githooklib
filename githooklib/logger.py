@@ -90,7 +90,6 @@ class Logger(logging.Logger):
         self.propagate = True
         _get_root_logger()
 
-
     def setLevel(self, level: Union[int, str]) -> None:
         root_logger = _get_root_logger()
         root_logger.setLevel(level)
