@@ -81,6 +81,10 @@ class HookDiscoveryService:
         self.hook_search_paths = hook_search_paths
         self.invalidate_cache()
 
+    def hook_exists(self, hook_name: str) -> bool:
+        hooks = self.discover_hooks()
+        return hook_name in hooks
+
     def _import_all_hook_modules(self) -> None:
         hook_modules = self.find_hook_modules()
         for module_path in hook_modules:

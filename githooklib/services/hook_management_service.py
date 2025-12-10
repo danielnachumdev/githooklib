@@ -1,14 +1,31 @@
 import logging
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional
+
 from ..constants import EXIT_FAILURE
+from ..gateways.git_repository_gateway import GitRepositoryGateway
 from ..logger import get_logger
 from .hook_discovery_service import HookDiscoveryService
 
 logger = get_logger()
 
 
+@dataclass
+class InstalledHooksContext:
+    installed_hooks: dict[str, bool]
+    git_root: Optional[Path]
+    hooks_dir_exists: bool
+
+
 class HookManagementService:
-    def __init__(self, hook_discovery_service: HookDiscoveryService) -> None:
+    def __init__(
+        self,
+        hook_discovery_service: HookDiscoveryService,
+        git_repository_gateway: Optional[GitRepositoryGateway] = None,
+    ) -> None:
         self.hook_discovery_service = hook_discovery_service
+        self.git_repository_gateway = git_repository_gateway
 
     def list_hooks(self) -> list[str]:
         hooks = self.hook_discovery_service.discover_hooks()
@@ -44,5 +61,22 @@ class HookManagementService:
         hook = hook_class()
         return hook.run()
 
+    def get_installed_hooks_with_context(self) -> InstalledHooksContext:
+        if not self.git_repository_gateway:
+            return InstalledHooksContext({}, None, False)
 
-__all__ = ["HookManagementService"]
+        git_root = self.git_repository_gateway.find_git_root()
+        if not git_root:
+            return InstalledHooksContext({}, None, False)
+
+        hooks_dir = git_root / ".git" / "hooks"
+        hooks_dir_exists = hooks_dir.exists()
+
+        if not hooks_dir_exists:
+            return InstalledHooksContext({}, git_root, False)
+
+        installed_hooks = self.git_repository_gateway.get_installed_hooks(hooks_dir)
+        return InstalledHooksContext(installed_hooks, git_root, True)
+
+
+__all__ = ["HookManagementService", "InstalledHooksContext"]

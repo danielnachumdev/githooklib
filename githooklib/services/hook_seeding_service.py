@@ -1,9 +1,9 @@
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from ..logger import get_logger
-import githooklib.examples as examples_module
 
 logger = get_logger()
 
@@ -11,10 +11,18 @@ EXAMPLES_DIR = "examples"
 TARGET_HOOKS_DIR = "githooks"
 
 
+@dataclass
+class SeedFailureDetails:
+    example_not_found: bool
+    project_root_not_found: bool
+    target_hook_already_exists: bool
+    target_hook_path: Optional[Path]
+    available_examples: List[str]
+
+
 class ExamplesGateway:
 
     def _get_githooklib_path(self) -> Path:
-        print(examples_module.__path__)
         return Path(__file__).parent.parent
 
     def _get_examples_folder_path(self) -> Path:
@@ -68,5 +76,30 @@ class HookSeedingService:
         logger.info("Successfully seeded hook '%s' to %s", example_name, target_file)
         return True
 
+    def get_seed_failure_details(
+        self, example_name: str, project_root: Optional[Path]
+    ) -> SeedFailureDetails:
+        example_not_found = not self.examples_gateway.is_example_available(example_name)
+        project_root_not_found = project_root is None
+        target_hook_path = (
+            self.get_target_hook_path(example_name, project_root)
+            if project_root
+            else None
+        )
+        target_hook_already_exists = (
+            self.does_target_hook_exist(example_name, project_root)
+            if project_root
+            else False
+        )
+        available_examples = self.examples_gateway.get_available_examples()
 
-__all__ = ["HookSeedingService", "ExamplesGateway"]
+        return SeedFailureDetails(
+            example_not_found=example_not_found,
+            project_root_not_found=project_root_not_found,
+            target_hook_already_exists=target_hook_already_exists,
+            target_hook_path=target_hook_path,
+            available_examples=available_examples,
+        )
+
+
+__all__ = ["HookSeedingService", "ExamplesGateway", "SeedFailureDetails"]
