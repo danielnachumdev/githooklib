@@ -29,8 +29,8 @@ class CustomNamedHookFile(GitHook):
 class TestInstallE2E(OperationsBaseTestCase):
 
     def test_install_creates_hook_script_with_hook_name(self):
-        with tempfile.TemporaryDirectory() as root:
-            root: Path = PathUtils.normalize(root)  # type: ignore[no-redef]
+        with tempfile.TemporaryDirectory() as str_root:
+            root: Path = PathUtils.normalize(str_root)
             self.git(["init"], cwd=root)
             self.get_githooks_folder(root).mkdir(parents=True)
             self.save_hook_to(

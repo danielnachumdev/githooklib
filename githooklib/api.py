@@ -18,23 +18,19 @@ class API:
     DEFAULT_HOOK_SEARCH_DIR = "githooks"
 
     def __init__(self) -> None:
-        project_root_gateway = ProjectRootGateway()
         git_repository_gateway = GitRepositoryGateway()
         module_import_gateway = ModuleImportGateway()
 
-        self.project_root = project_root_gateway.find_project_root()
         self.hook_search_paths = [self.DEFAULT_HOOK_SEARCH_DIR]
         self.hook_discovery_service = HookDiscoveryService(
-            project_root=self.project_root,
             hook_search_paths=self.hook_search_paths,
-            project_root_gateway=project_root_gateway,
             module_import_gateway=module_import_gateway,
         )
         self.hook_management_service = HookManagementService(
             self.hook_discovery_service
         )
         self.error_message_service = ErrorMessageService(self.hook_discovery_service)
-        self.hook_seeding_service = HookSeedingService(project_root_gateway)
+        self.hook_seeding_service = HookSeedingService()
         self.git_repository_gateway = git_repository_gateway
 
     def discover_hooks(self) -> dict[str, type[GitHook]]:
@@ -80,17 +76,17 @@ class API:
 
     def get_target_hook_path(self, example_name: str) -> Optional[Path]:
         return self.hook_seeding_service.get_target_hook_path(
-            example_name, target_project_root=self.project_root
+            example_name, project_root=ProjectRootGateway.find_project_root()
         )
 
     def does_target_hook_exist(self, example_name: str) -> bool:
         return self.hook_seeding_service.does_target_hook_exist(
-            example_name, target_project_root=self.project_root
+            example_name, project_root=ProjectRootGateway.find_project_root()
         )
 
     def seed_hook(self, example_name: str) -> bool:
         return self.hook_seeding_service.seed_hook(
-            example_name, target_project_root=self.project_root
+            example_name, project_root=ProjectRootGateway.find_project_root()
         )
 
 

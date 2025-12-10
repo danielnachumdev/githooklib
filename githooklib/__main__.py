@@ -5,6 +5,7 @@ import platform
 import sys
 from unittest.mock import patch
 
+from githooklib.gateways import ProjectRootGateway
 from githooklib import get_logger
 from githooklib.logger import TRACE
 
@@ -21,6 +22,7 @@ def _setup_logging() -> None:
     else:
         logger.setLevel(logging.INFO)
 
+
 if platform.system() != "Windows":
     os.environ["PAGER"] = "cat"
     os.environ["INTERACTIVE"] = "False"
@@ -36,7 +38,11 @@ def main() -> None:
     _setup_logging()
     logger.trace("platform: %s", platform.platform())
     logger.trace("interpreter: %s", sys.executable)
-    logger.debug("CWD: %s", os.getcwd())
+    root = ProjectRootGateway.find_project_root()
+    if not root:
+        logger.error("Could not find project root")
+        sys.exit(1)
+    logger.debug("CWD: %s", root)
     original_function = fire.trace.FireTrace.GetResult
     mock_function = FireGetResultMock(original_function)
     try:

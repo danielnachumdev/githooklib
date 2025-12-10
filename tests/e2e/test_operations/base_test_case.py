@@ -7,7 +7,6 @@ from tests.base_test_case import BaseTestCase
 from tests.utils import PathUtils
 
 
-
 class OperationsBaseTestCase(BaseTestCase):
     def setUp(self) -> None:
         self.executor = CommandExecutor()

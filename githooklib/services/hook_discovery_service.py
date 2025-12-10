@@ -32,14 +32,11 @@ class HookDiscoveryService:
 
     def __init__(
         self,
-        project_root: Optional[Path],
         hook_search_paths: list[str],
-        project_root_gateway: ProjectRootGateway,
         module_import_gateway: ModuleImportGateway,
     ) -> None:
-        self.project_root = project_root
+        self.project_root = ProjectRootGateway.find_project_root()
         self.hook_search_paths = hook_search_paths
-        self.project_root_gateway = project_root_gateway
         self.module_import_gateway = module_import_gateway
         self._hooks: Optional[dict[str, type[GitHook]]] = None
 
