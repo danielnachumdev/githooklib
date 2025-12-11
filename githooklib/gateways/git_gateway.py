@@ -1,4 +1,5 @@
 import subprocess
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional, Dict
 
@@ -9,6 +10,7 @@ logger = get_logger()
 
 class GitGateway:
     @staticmethod
+    @lru_cache
     def get_git_root_path() -> Optional[Path]:
         result = (
             GitGateway._find_git_root_via_command()
@@ -43,6 +45,7 @@ class GitGateway:
                 return resolved
         return None
 
+    @lru_cache
     def get_installed_hooks(self, hooks_dir: Path) -> Dict[str, bool]:
         installed = {}
         for hook_file in hooks_dir.iterdir():

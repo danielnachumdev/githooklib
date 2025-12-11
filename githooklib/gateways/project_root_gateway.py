@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 
 from ..exceptions import GitHookLibException
@@ -9,6 +10,7 @@ logger = get_logger()
 
 class ProjectRootGateway:
     @staticmethod
+    @lru_cache
     def find_project_root() -> Path:
         git = GitGateway.get_git_root_path()
         if not git:
