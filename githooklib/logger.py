@@ -1,7 +1,7 @@
 import logging
 import sys
 from types import FrameType
-from typing import IO, Optional, Union
+from typing import IO, Optional, Union, Dict
 import os
 
 TRACE = 5
@@ -21,7 +21,7 @@ def is_internal_frame(frame: FrameType) -> bool:
 
 setattr(logging, "_is_internal_frame", is_internal_frame)
 
-_DISPLAY_NAME_MAP: dict[str, str] = {}
+_DISPLAY_NAME_MAP: Dict[str, str] = {}
 _ROOT_LOGGER_INITIALIZED = False
 
 
