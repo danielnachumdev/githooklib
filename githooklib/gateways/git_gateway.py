@@ -57,9 +57,7 @@ class GitGateway:
         try:
             content = hook_path.read_text()
             has_delegation_pattern = (
-                "-m" in content
-                and "githooklib" in content
-                and "run" in content
+                "-m" in content and "githooklib" in content and "run" in content
             )
             return has_delegation_pattern
         except (OSError, IOError, UnicodeDecodeError) as e:
