@@ -38,7 +38,7 @@ def _get_root_logger() -> logging.Logger:
     if not _ROOT_LOGGER_INITIALIZED:
         handler = StreamRouter(sys.stdout, sys.stderr)
         formatter = DisplayNameFormatter(
-            "[%(display_name)s] %(levelname)-5s %(asctime)s %(filename)s:%(lineno)d | %(message)s",
+            "[%(display_name)s] %(levelname)-7s %(asctime)s %(filename)s:%(lineno)d | %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
         handler.setFormatter(formatter)
