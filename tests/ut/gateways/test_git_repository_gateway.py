@@ -82,7 +82,24 @@ class TestGitRepositoryGateway(BaseTestCase):
             mode="w", delete=False, suffix=".sh"
         ) as temp_file:
             temp_path = Path(temp_file.name)
-            temp_file.write("githooklib find_project_root")
+            delegation_script = """#!/usr/bin/env python3
+
+import subprocess
+import sys
+
+
+def main() -> None:
+    result = subprocess.run(
+        ["python", "-m", "githooklib", "run", "pre-commit"],
+        cwd="/path/to/project",
+    )
+    sys.exit(result.returncode)
+
+
+if __name__ == "__main__":
+    main()
+"""
+            temp_file.write(delegation_script)
         try:
             result = GitGateway._is_hook_from_githooklib(temp_path)
             self.assertTrue(result)
@@ -129,7 +146,24 @@ class TestGitRepositoryGateway(BaseTestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             hooks_dir = Path(temp_dir)
             githooklib_hook = hooks_dir / "pre-commit"
-            githooklib_hook.write_text("githooklib find_project_root")
+            delegation_script = """#!/usr/bin/env python3
+
+import subprocess
+import sys
+
+
+def main() -> None:
+    result = subprocess.run(
+        ["python", "-m", "githooklib", "run", "pre-commit"],
+        cwd="/path/to/project",
+    )
+    sys.exit(result.returncode)
+
+
+if __name__ == "__main__":
+    main()
+"""
+            githooklib_hook.write_text(delegation_script)
             regular_hook = hooks_dir / "pre-push"
             regular_hook.write_text("#!/bin/bash\necho 'test'")
             sample_hook = hooks_dir / "pre-commit.sample"

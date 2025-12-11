@@ -49,7 +49,7 @@ class CLI:
 
         print("Installed hooks:")
         for hook_name, installed_via_tool in sorted(context.installed_hooks.items()):
-            source = "via tool" if installed_via_tool else "external"
+            source = "githooklib" if installed_via_tool else "external"
             print(f"  - {hook_name} ({source})")
 
     def run(self, hook_name: str) -> int:

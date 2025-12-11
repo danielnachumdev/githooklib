@@ -56,8 +56,12 @@ class GitGateway:
     def _is_hook_from_githooklib(hook_path: Path) -> bool:
         try:
             content = hook_path.read_text()
-            is_from_tool = "githooklib" in content and "find_project_root" in content
-            return is_from_tool
+            has_delegation_pattern = (
+                "-m" in content
+                and "githooklib" in content
+                and "run" in content
+            )
+            return has_delegation_pattern
         except (OSError, IOError, UnicodeDecodeError) as e:
             return False
 

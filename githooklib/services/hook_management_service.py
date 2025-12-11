@@ -58,14 +58,11 @@ class HookManagementService:
         return hook.run()
 
     def get_installed_hooks_with_context(self) -> InstalledHooksContext:
-        if not self.git_gateway:
-            return InstalledHooksContext({}, None, False)
-
         git_root = self.git_gateway.get_git_root_path()
         if not git_root:
             return InstalledHooksContext({}, None, False)
 
-        hooks_dir = git_root / ".git" / "hooks"
+        hooks_dir = git_root / "hooks"
         hooks_dir_exists = hooks_dir.exists()
 
         if not hooks_dir_exists:

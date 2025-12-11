@@ -78,8 +78,7 @@ class HookDiscoveryService:
         self.invalidate_cache()
 
     def hook_exists(self, hook_name: str) -> bool:
-        hooks = self.discover_hooks()
-        return hook_name in hooks
+        return hook_name in self.discover_hooks()
 
     def _import_all_hook_modules(self) -> None:
         hook_modules = self.find_hook_modules()

@@ -112,7 +112,7 @@ class GitHook(ABC):
         if not git_root:
             self.logger.error("Not a git repository")
             return False
-        hook_script_path = git_root / ".git" / "hooks" / self.get_hook_name()
+        hook_script_path = git_root / "hooks" / self.get_hook_name()
         if not hook_script_path.exists():
             self.logger.warning("Hook script not found: %s", hook_script_path)
             return False
