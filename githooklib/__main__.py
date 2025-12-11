@@ -50,6 +50,9 @@ def main() -> None:
             code = fire.Fire(CLI)
     except Exception:  # pylint: disable=broad-except
         sys.exit(1)
+    except KeyboardInterrupt:
+        logger.error("KeyboardInterrupt")
+        sys.exit(1)
 
     sys.exit(code if isinstance(code, int) else 0)
 
