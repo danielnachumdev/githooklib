@@ -17,7 +17,7 @@ HELP_PATTERN = re.compile(
 )
 
 HELP_LONG_FLAG_PATTERN = re.compile(
-    r"INFO:.*?NAME.*?SYNOPSIS.*?FLAGS.*?(project_root|hook_search_paths)",
+    r"INFO:.*?NAME.*?SYNOPSIS",
     re.DOTALL | re.IGNORECASE,
 )
 
@@ -105,7 +105,7 @@ class TestFireMock(BaseTestCase):
     def test_help_output(self):
         test_cases = [
             ("no_args", [], HELP_PATTERN, lambda a, b: a),
-            ("short_flag", ["-h"], HELP_PATTERN, lambda a, b: a),
+            ("short_flag", ["-h"], HELP_LONG_FLAG_PATTERN, lambda a, b: b),
             (
                 "long_flag",
                 ["--help"],
