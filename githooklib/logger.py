@@ -75,12 +75,22 @@ class StreamRouter(logging.Handler):
         return record.levelno >= logging.ERROR
 
     def _write_to_stderr(self, msg: str) -> None:
-        self.stderr.write(msg)
-        self.stderr.flush()
+        try:
+            from tqdm import tqdm
+
+            tqdm.write(msg, end="")
+        except ImportError:
+            self.stderr.write(msg)
+            self.stderr.flush()
 
     def _write_to_stdout(self, msg: str) -> None:
-        self.stdout.write(msg)
-        self.stdout.flush()
+        try:
+            from tqdm import tqdm
+
+            tqdm.write(msg, end="")
+        except ImportError:
+            self.stdout.write(msg)
+            self.stdout.flush()
 
 
 class Logger(logging.Logger):
