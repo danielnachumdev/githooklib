@@ -24,6 +24,7 @@ class CommandExecutor:
     ) -> CommandResult:
         cmd_list = self._normalize_command(command, shell)
         normalized_cwd = self._normalize_cwd(cwd)
+        logger.debug("Running command: %s", " ".join(cmd_list))
         result = self._execute_command(
             cmd_list, normalized_cwd, capture_output, check, text, shell, stdin
         )
