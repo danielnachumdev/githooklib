@@ -1,4 +1,5 @@
 import sys
+from enum import Enum
 
 from githooklib import GitHook, GitHookContext, HookResult
 from githooklib.command import CommandExecutor, CommandResult
@@ -16,7 +17,7 @@ def _black_exists(command_executor: CommandExecutor) -> bool:
     return True
 
 
-def _get_modified_python_files(command_executor: CommandExecutor) -> list[str]:
+def _get_tracked_python_files(command_executor: CommandExecutor) -> list[str]:
     result = command_executor.run(["git", "diff", "--name-only"])
     if not result.success:
         return []
@@ -26,21 +27,37 @@ def _get_modified_python_files(command_executor: CommandExecutor) -> list[str]:
     return [f for f in modified_files if f.endswith(".py")]
 
 
+def _get_previously_staged_python_files(
+    command_executor: CommandExecutor,
+) -> list[str]:
+    result = command_executor.run(["git", "diff", "--name-only", "--cached"])
+    if not result.success:
+        return []
+    staged_files = [
+        line.strip() for line in result.stdout.strip().split("\n") if line.strip()
+    ]
+    return [f for f in staged_files if f.endswith(".py")]
+
+
 def _stage_files(command_executor: CommandExecutor, files: list[str]) -> CommandResult:
     return command_executor.run(["git", "add"] + files)
 
 
 class BlackFormatterPreCommit(GitHook):
+    class StagePolicy(str, Enum):
+        ALL = "all_tracked"
+        CHANGED_FILES_ONLY = "previously_staged"
+
     @classmethod
     def get_hook_name(cls) -> str:
         return "pre-commit"
 
     def __init__(
         self,
-        stage_changes: bool = True,
+        stage_policy: "BlackFormatterPreCommit.StagePolicy" = StagePolicy.CHANGED_FILES_ONLY,
     ) -> None:
         super().__init__()
-        self.stage_changes = stage_changes
+        self.stage_policy = stage_policy
 
     def execute(self, context: GitHookContext) -> HookResult:
         if not _black_exists(self.command_executor):
@@ -63,25 +80,28 @@ class BlackFormatterPreCommit(GitHook):
                 exit_code=1,
             )
 
-        if self.stage_changes:
-            modified_files = _get_modified_python_files(self.command_executor)
-            if modified_files:
-                logger.info("Staging %d formatted file(s)...", len(modified_files))
-                staging_result = _stage_files(self.command_executor, modified_files)
-                if not staging_result.success:
-                    logger.error("Failed to stage formatted files.")
-                    return HookResult(
-                        success=False,
-                        message="Failed to stage formatted files.",
-                        exit_code=1,
-                    )
-                logger.success("Formatted files staged successfully!")
-
-        logger.success("Code reformatted successfully!")
+        tracked_files = _get_tracked_python_files(self.command_executor)
+        files_to_stage = tracked_files
+        if self.stage_policy == self.StagePolicy.CHANGED_FILES_ONLY:
+            staged_files = _get_previously_staged_python_files(self.command_executor)
+            files_to_stage = [file for file in tracked_files if file in staged_files]
+        if files_to_stage:
+            logger.info("Staging %d formatted file(s)...", len(files_to_stage))
+            staging_result = _stage_files(self.command_executor, files_to_stage)
+            if not staging_result.success:
+                logger.error("Failed to stage formatted files.")
+                return HookResult(
+                    success=False,
+                    message="Failed to stage formatted files.",
+                    exit_code=1,
+                )
+            logger.success("Formatted files staged successfully!")
         return HookResult(success=True, message="Pre-commit checks passed!")
 
 
-__all__ = ["BlackFormatterPreCommit"]
+StagePolicy = BlackFormatterPreCommit.StagePolicy
+
+__all__ = ["BlackFormatterPreCommit", "StagePolicy"]
 
 
 if __name__ == "__main__":
