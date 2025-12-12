@@ -117,8 +117,7 @@ class TestFireMock(BaseTestCase):
         for test_name, args, pattern, selector in test_cases:
             with self.subTest(test_name=test_name):
                 exit_code, stdout, stderr = self.runner.run_module_command(args)
-                # type: ignore[no-untyped-call]
-                output = selector(stdout, stderr)
+                output = selector(stdout, stderr)  # type: ignore[no-untyped-call]
                 self.assertRegex(output, pattern)
                 self.assertEqual(0, exit_code)
 
