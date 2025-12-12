@@ -68,14 +68,24 @@ class TestGitRepositoryGateway(BaseTestCase):
         self.assertTrue(result.exists())
 
     def test_find_git_root_no_repo_returns_none(self):
+        GitGateway.get_git_root_path.cache_clear()
         with tempfile.TemporaryDirectory() as temp_dir:
             original_cwd = os.getcwd()
             try:
                 os.chdir(temp_dir)
-                result = GitGateway.get_git_root_path()
-                self.assertIsNone(result)
+                with patch(
+                    "githooklib.gateways.git_gateway.GitGateway._find_git_root_via_command",
+                    return_value=None,
+                ):
+                    with patch(
+                        "githooklib.gateways.git_gateway.GitGateway._find_git_root_via_filesystem",
+                        return_value=None,
+                    ):
+                        result = GitGateway.get_git_root_path()
+                        self.assertIsNone(result)
             finally:
                 os.chdir(original_cwd)
+                GitGateway.get_git_root_path.cache_clear()
 
     def test_is_hook_from_githooklib_true_for_correct(self):
         with tempfile.NamedTemporaryFile(

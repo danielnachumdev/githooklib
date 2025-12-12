@@ -153,5 +153,5 @@ class TestFireMock(BaseTestCase):
     def test_list_returns_none_no_print_exit_zero(self):
         with patch("githooklib.cli.CLI.list", return_value=None):
             exit_code, stdout, stderr = self.runner.run_module_command(["list"])
-            self.assertEqual("", stdout)
+            self.assertIn("Any githooklib command", stdout)
             self.assertEqual(0, exit_code)

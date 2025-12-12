@@ -42,26 +42,21 @@ class TestShowE2E(OperationsBaseTestCase):
 
     def test_no_hooks_installed(self):
         with self.new_temp_project() as root:
-            result = self.githooklib(["show"], cwd=root, success=False, exit_code=0)
+            result = self.githooklib(["show"], cwd=root, success=True, exit_code=0)
             self.assertIn("No hooks installed", result.stdout)
 
     def test_not_in_git_repository(self):
-        with self.new_temp_project() as root:
-            non_git_dir = root.parent / "non_git_dir"
-            non_git_dir.mkdir()
-            try:
-                result = self.githooklib(
-                    ["show"], cwd=non_git_dir, success=False, exit_code=0
-                )
-                self.assertIn("Not in a git repository", result.stdout)
-            finally:
-                non_git_dir.rmdir()
+        with self.new_temp_project(git=False) as root:
+            result = self.githooklib(["show"], cwd=root, success=False, exit_code=1)
+            self.assertIn("Could not find git repository", result.stdout)
 
     def test_no_hooks_directory(self):
         with self.new_temp_project() as root:
             hooks_dir = self.get_installed_hooks_path(root)
-            hooks_dir.rmdir()
-            result = self.githooklib(["show"], cwd=root, success=False, exit_code=0)
+            import shutil
+
+            shutil.rmtree(hooks_dir)
+            result = self.githooklib(["show"], cwd=root, success=True, exit_code=0)
             self.assertIn("No hooks directory found", result.stdout)
 
 

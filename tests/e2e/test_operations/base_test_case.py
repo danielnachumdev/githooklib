@@ -68,20 +68,28 @@ class OperationsBaseTestCase(BaseTestCase):
         return result
 
     def list(self, cwd: Optional[Path] = None) -> List[str]:
-        return [
-            hook.strip()[2:]
-            for hook in self.githooklib(["list"], cwd=cwd).stdout.splitlines()[1:-1]
-        ]
+        stdout = self.githooklib(["list"], cwd=cwd).stdout
+        lines = stdout.splitlines()
+        hooks = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("- "):
+                hooks.append(stripped[2:])
+        return hooks
 
     def show(self, cwd: Optional[Path] = None) -> List[str]:
-        return [
-            hook.strip()[2:].strip()
-            for hook in self.githooklib(["show"], cwd=cwd).stdout.splitlines()[1:-1]
-        ]
+        stdout = self.githooklib(["show"], cwd=cwd).stdout
+        lines = stdout.splitlines()
+        hooks = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("- "):
+                hooks.append(stripped[2:])
+        return hooks
 
     @contextmanager
     def new_temp_project(
-        self, hook_setup: Optional[Dict[str, str]] = None
+        self, hook_setup: Optional[Dict[str, str]] = None, git: bool = True
     ) -> Generator[Path]:
         if hook_setup is None:
             hook_setup = {
@@ -93,7 +101,8 @@ class OperationsBaseTestCase(BaseTestCase):
             }
         with tempfile.TemporaryDirectory(delete=True) as temp_dir_str:
             root = Path(temp_dir_str)
-            self.git(["init"], cwd=root)
+            if git:
+                self.git(["init"], cwd=root)
             (root / "githooks").mkdir(parents=True)
             for hook, content in hook_setup.items():
                 (root / "githooks" / f"{to_snake_case(hook)}.py").write_text(content)

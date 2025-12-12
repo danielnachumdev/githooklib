@@ -6,7 +6,8 @@ from .base_test_case import OperationsBaseTestCase
 class TestRunE2E(OperationsBaseTestCase):
 
     def test_install_sanity_check(self):
-        self.githooklib(["run", "pre-push"])
+        with self.new_temp_project() as root:
+            self.githooklib(["run", "pre-push"], cwd=root)
 
     def test_no_debug_or_trace(self):
         with self.new_temp_project() as root:

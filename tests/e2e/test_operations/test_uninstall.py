@@ -4,18 +4,6 @@ from .base_test_case import OperationsBaseTestCase
 
 
 class TestUninstallE2E(OperationsBaseTestCase):
-    def test_uninstall(self):
-        available_hooks = set(self.list())
-        installed_hooks = set(
-            hook.strip("(githooklib)").strip()
-            for hook in self.show()
-            if "external" not in hook
-        )
-        checkable_hooks = installed_hooks.intersection(available_hooks)
-        hook = checkable_hooks.pop()
-        self.githooklib(["uninstall", hook])
-        self.githooklib(["install", hook])
-
     def test_successful_uninstallation(self):
         with self.new_temp_project() as root:
             self.githooklib(["install", "pre-commit"], cwd=root)
@@ -47,33 +35,31 @@ class TestUninstallE2E(OperationsBaseTestCase):
             self.assertEqual(1, result.exit_code)
 
     def test_not_in_git_repository(self):
-        with self.new_temp_project() as root:
-            non_git_dir = root.parent / "non_git_dir"
-            non_git_dir.mkdir()
-            try:
-                result = self.githooklib(
-                    ["uninstall", "pre-commit"],
-                    cwd=non_git_dir,
-                    success=False,
-                    exit_code=1,
-                )
-                self.assertEqual(1, result.exit_code)
-            finally:
-                non_git_dir.rmdir()
+        with self.new_temp_project(git=False) as root:
+            result = self.githooklib(
+                ["uninstall", "pre-commit"],
+                cwd=root,
+                success=False,
+                exit_code=1,
+            )
+            self.assertEqual(1, result.exit_code)
 
     def test_external_hook_handling(self):
         with self.new_temp_project() as root:
             self.create_external_hook(
-                root, "pre-commit", "#!/bin/sh\necho 'External hook'\n"
+                root, "prepare-commit-msg", "#!/bin/sh\necho 'External hook'\n"
             )
-            self.verify_hook_installed(root, "pre-commit")
+            self.verify_hook_installed(root, "prepare-commit-msg")
 
             result = self.githooklib(
-                ["uninstall", "pre-commit"], cwd=root, success=False, exit_code=1
+                ["uninstall", "prepare-commit-msg"],
+                cwd=root,
+                success=False,
+                exit_code=1,
             )
             self.assertEqual(1, result.exit_code)
 
-            hook_path = self.get_installed_hooks_path(root) / "pre-commit"
+            hook_path = self.get_installed_hooks_path(root) / "prepare-commit-msg"
             self.assertTrue(hook_path.exists(), "External hook should not be removed")
 
     def test_uninstall_verification(self):

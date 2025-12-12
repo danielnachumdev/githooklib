@@ -7,10 +7,10 @@ from githooklib import GitHook, GitHookContext, HookResult, CommandExecutor
 class TestPreCommit(unittest.TestCase):
     def setUp(self):
         self.mock_context = GitHookContext(
-            hook_name="pre-commit", stdin_lines=["git commit"]
+            hook_name="pre-commit", argv=["git", "commit"]
         )
         self.mock_patcher = patch(
-            "githooklib.git_hook.GitHookContext.from_stdin",
+            "githooklib.git_hook.GitHookContext.from_argv",
             return_value=self.mock_context,
         )
         self.mock_patcher.start()
