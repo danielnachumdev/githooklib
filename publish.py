@@ -21,7 +21,7 @@ from githooklib.__main__ import main as entry_point
 def main() -> None:
     publish(
         name="githooklib",
-        version="0.1.3",
+        version="1.0.0",
         author="danielnachumdev",
         author_email="danielnachumdev@gmail.com",
         description="A Python framework (and CLI) for creating, managing, and installing Git hooks with python",
@@ -45,7 +45,6 @@ def main() -> None:
         ],
         scripts={"githooklib": entry_point, "githooks": entry_point},
         pbar=tqdm(desc="QA", leave=False),  # type: ignore
-        demo=True,
     )
 
 
