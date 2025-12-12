@@ -4,12 +4,32 @@ from typing import Optional
 from .api import API
 from .constants import EXIT_SUCCESS, EXIT_FAILURE
 from .logger import get_logger
+from .ui_messages import (
+    UI_MESSAGE_AVAILABLE_HOOKS_HEADER,
+    UI_MESSAGE_NO_HOOKS_FOUND,
+    UI_MESSAGE_INSTALLED_HOOKS_HEADER,
+    UI_MESSAGE_NOT_IN_GIT_REPOSITORY,
+    UI_MESSAGE_NO_HOOKS_DIRECTORY_FOUND,
+    UI_MESSAGE_NO_HOOKS_INSTALLED,
+    UI_MESSAGE_AVAILABLE_EXAMPLE_HOOKS_HEADER,
+    UI_MESSAGE_NO_EXAMPLE_HOOKS_AVAILABLE,
+    UI_MESSAGE_ERROR_PREFIX,
+    UI_MESSAGE_HOOK_SOURCE_GITHOOKLIB,
+    UI_MESSAGE_HOOK_SOURCE_EXTERNAL,
+    UI_MESSAGE_EXAMPLE_NOT_FOUND_PREFIX,
+    UI_MESSAGE_EXAMPLE_NOT_FOUND_SUFFIX,
+    UI_MESSAGE_EXAMPLE_ALREADY_EXISTS_PREFIX,
+    UI_MESSAGE_EXAMPLE_ALREADY_EXISTS_SUFFIX,
+    UI_MESSAGE_FAILED_TO_SEED_EXAMPLE_PREFIX,
+    UI_MESSAGE_FAILED_TO_SEED_EXAMPLE_PROJECT_ROOT_NOT_FOUND,
+    UI_MESSAGE_ERROR_SEEDING_EXAMPLE_PREFIX,
+)
 
 logger = get_logger()
 
 
 def print_error(message: str) -> None:
-    print(f"Error: {message}", file=sys.stderr)
+    print(f"{UI_MESSAGE_ERROR_PREFIX}{message}", file=sys.stderr)
 
 
 class CLI:
@@ -22,15 +42,15 @@ class CLI:
         try:
             hook_names = self._api.list_available_hook_names()
         except ValueError as e:
-            logger.error("Error listing hooks: %s", e)
+            logger.error("%s%s", UI_MESSAGE_ERROR_PREFIX, e)
             print_error(str(e))
             return
 
         if not hook_names:
-            logger.error("No hooks found")
+            logger.error(UI_MESSAGE_NO_HOOKS_FOUND)
             return
 
-        print("Available hooks:")
+        print(UI_MESSAGE_AVAILABLE_HOOKS_HEADER)
         for hook_name in hook_names:
             print(f"  - {hook_name}")
 
@@ -40,16 +60,20 @@ class CLI:
 
         if not context.installed_hooks:
             if not context.git_root:
-                logger.error("Not in a git repository")
+                logger.error(UI_MESSAGE_NOT_IN_GIT_REPOSITORY)
             elif not context.hooks_dir_exists:
-                logger.error("No hooks directory found")
+                logger.error(UI_MESSAGE_NO_HOOKS_DIRECTORY_FOUND)
             else:
-                logger.error("No hooks installed")
+                logger.error(UI_MESSAGE_NO_HOOKS_INSTALLED)
             return
 
-        print("Installed hooks:")
+        print(UI_MESSAGE_INSTALLED_HOOKS_HEADER)
         for hook_name, installed_via_tool in sorted(context.installed_hooks.items()):
-            source = "githooklib" if installed_via_tool else "external"
+            source = (
+                UI_MESSAGE_HOOK_SOURCE_GITHOOKLIB
+                if installed_via_tool
+                else UI_MESSAGE_HOOK_SOURCE_EXTERNAL
+            )
             print(f"  - {hook_name} ({source})")
 
     def run(self, hook_name: str) -> int:
@@ -139,9 +163,9 @@ class CLI:
         if example_name is None:
             available_examples = self._api.list_available_example_names()
             if not available_examples:
-                logger.error("No example hooks available")
+                logger.error(UI_MESSAGE_NO_EXAMPLE_HOOKS_AVAILABLE)
                 return EXIT_FAILURE
-            print("Available example hooks:")
+            print(UI_MESSAGE_AVAILABLE_EXAMPLE_HOOKS_HEADER)
             for example in available_examples:
                 print(f"  - {example}")
             return EXIT_SUCCESS
@@ -164,15 +188,19 @@ class CLI:
                     failure_details.available_examples,
                 )
                 print_error(
-                    f"Example '{example_name}' not found. "
-                    f"Available examples: {', '.join(failure_details.available_examples)}"
+                    f"{UI_MESSAGE_EXAMPLE_NOT_FOUND_PREFIX}"
+                    f"{example_name}"
+                    f"{UI_MESSAGE_EXAMPLE_NOT_FOUND_SUFFIX}"
+                    f"{', '.join(failure_details.available_examples)}"
                 )
                 return EXIT_FAILURE
 
             if failure_details.project_root_not_found:
                 logger.warning("Project root not found for example '%s'", example_name)
                 print_error(
-                    f"Failed to seed example '{example_name}'. Project root not found."
+                    f"{UI_MESSAGE_FAILED_TO_SEED_EXAMPLE_PREFIX}"
+                    f"{example_name}"
+                    f"{UI_MESSAGE_FAILED_TO_SEED_EXAMPLE_PROJECT_ROOT_NOT_FOUND}"
                 )
                 return EXIT_FAILURE
 
@@ -183,7 +211,10 @@ class CLI:
                 )
                 if target_path:
                     print_error(
-                        f"Example '{example_name}' already exists at {target_path}"
+                        f"{UI_MESSAGE_EXAMPLE_ALREADY_EXISTS_PREFIX}"
+                        f"{example_name}"
+                        f"{UI_MESSAGE_EXAMPLE_ALREADY_EXISTS_SUFFIX}"
+                        f"{target_path}"
                     )
                 return EXIT_FAILURE
 
@@ -191,12 +222,14 @@ class CLI:
                 "Failed to seed example '%s'. Project root not found.", example_name
             )
             print_error(
-                f"Failed to seed example '{example_name}'. Project root not found."
+                f"{UI_MESSAGE_FAILED_TO_SEED_EXAMPLE_PREFIX}"
+                f"{example_name}"
+                f"{UI_MESSAGE_FAILED_TO_SEED_EXAMPLE_PROJECT_ROOT_NOT_FOUND}"
             )
             return EXIT_FAILURE
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("Error seeding example '%s': %s", example_name, e)
-            print_error(f"Error seeding example: {e}")
+            print_error(f"{UI_MESSAGE_ERROR_SEEDING_EXAMPLE_PREFIX}{e}")
             return EXIT_FAILURE
 
 

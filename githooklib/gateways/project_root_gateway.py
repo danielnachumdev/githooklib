@@ -3,6 +3,7 @@ from pathlib import Path
 
 from ..exceptions import GitHookLibException
 from ..logger import get_logger
+from ..ui_messages import UI_MESSAGE_COULD_NOT_FIND_GIT_REPOSITORY
 from .git_gateway import GitGateway
 
 logger = get_logger()
@@ -14,8 +15,8 @@ class ProjectRootGateway:
     def find_project_root() -> Path:
         git = GitGateway.get_git_root_path()
         if not git:
-            logger.error("Could not find git repository")
-            raise GitHookLibException("Could not find git repository")
+            logger.error(UI_MESSAGE_COULD_NOT_FIND_GIT_REPOSITORY)
+            raise GitHookLibException(UI_MESSAGE_COULD_NOT_FIND_GIT_REPOSITORY)
         result = git.parent
         logger.trace("Project root: %s", result)
         return result

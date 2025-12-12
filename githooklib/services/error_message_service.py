@@ -1,6 +1,11 @@
 from pathlib import Path
 
 from ..logger import get_logger
+from ..ui_messages import (
+    UI_MESSAGE_HOOK_NOT_FOUND_PREFIX,
+    UI_MESSAGE_HOOK_NOT_FOUND_SUFFIX,
+    UI_MESSAGE_COULD_NOT_FIND_HOOKS_UNDER,
+)
 from .hook_discovery_service import HookDiscoveryService
 
 logger = get_logger()
@@ -30,8 +35,10 @@ class ErrorMessageService:
         self.hook_discovery_service = HookDiscoveryService()
 
     def get_hook_not_found_error_message(self, hook_name: str) -> str:
-        error_lines = [f"Error: Hook '{hook_name}' not found"]
-        error_lines.append("Could not find hooks under:")
+        error_lines = [
+            f"{UI_MESSAGE_HOOK_NOT_FOUND_PREFIX}{hook_name}{UI_MESSAGE_HOOK_NOT_FOUND_SUFFIX}"
+        ]
+        error_lines.append(UI_MESSAGE_COULD_NOT_FIND_HOOKS_UNDER)
 
         self._add_project_root_search_info(error_lines)
         self._add_hook_search_paths_info(error_lines)

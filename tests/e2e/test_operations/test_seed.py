@@ -1,5 +1,12 @@
 import unittest
 
+from githooklib.ui_messages import (
+    UI_MESSAGE_AVAILABLE_EXAMPLE_HOOKS_HEADER,
+    UI_MESSAGE_EXAMPLE_NOT_FOUND_SUFFIX,
+    UI_MESSAGE_EXAMPLE_ALREADY_EXISTS_SUFFIX,
+    UI_MESSAGE_ERROR_PREFIX,
+)
+
 from .base_test_case import OperationsBaseTestCase
 
 
@@ -11,7 +18,7 @@ class TestSeedE2E(OperationsBaseTestCase):
         with self.new_temp_project() as root:
             result = self.githooklib(["seed"], cwd=root)
             self.assertEqual(0, result.exit_code)
-            self.assertIn("Available example hooks", result.stdout)
+            self.assertIn(UI_MESSAGE_AVAILABLE_EXAMPLE_HOOKS_HEADER, result.stdout)
             self.assertIn("pre_commit_black", result.stdout)
 
     def test_seed_specific_example(self):
@@ -30,8 +37,8 @@ class TestSeedE2E(OperationsBaseTestCase):
                 ["seed", "non_existent_example"], cwd=root, success=False, exit_code=1
             )
             self.assertEqual(1, result.exit_code)
-            self.assertIn("Error", result.stderr)
-            self.assertIn("not found", result.stderr)
+            self.assertIn(UI_MESSAGE_ERROR_PREFIX.strip(), result.stderr)
+            self.assertIn(UI_MESSAGE_EXAMPLE_NOT_FOUND_SUFFIX.strip(), result.stderr)
 
     def test_example_already_exists(self):
         with self.new_temp_project() as root:
@@ -40,8 +47,10 @@ class TestSeedE2E(OperationsBaseTestCase):
                 ["seed", "pre_commit_black"], cwd=root, success=False, exit_code=1
             )
             self.assertEqual(1, result.exit_code)
-            self.assertIn("Error", result.stderr)
-            self.assertIn("already exists", result.stderr)
+            self.assertIn(UI_MESSAGE_ERROR_PREFIX.strip(), result.stderr)
+            self.assertIn(
+                UI_MESSAGE_EXAMPLE_ALREADY_EXISTS_SUFFIX.strip(), result.stderr
+            )
 
     def test_not_in_git_repository(self):
         with self.new_temp_project() as root:
