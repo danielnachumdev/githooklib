@@ -37,7 +37,7 @@ class BlackFormatterPreCommit(GitHook):
 
     def __init__(
         self,
-        stage_changes: bool = False,
+        stage_changes: bool = True,
     ) -> None:
         super().__init__()
         self.stage_changes = stage_changes
@@ -66,7 +66,7 @@ class BlackFormatterPreCommit(GitHook):
         if self.stage_changes:
             modified_files = _get_modified_python_files(self.command_executor)
             if modified_files:
-                logger.info(f"Staging {len(modified_files)} formatted file(s)...")
+                logger.info("Staging %d formatted file(s)...", len(modified_files))
                 staging_result = _stage_files(self.command_executor, modified_files)
                 if not staging_result.success:
                     logger.error("Failed to stage formatted files.")
