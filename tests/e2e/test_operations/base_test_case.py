@@ -57,7 +57,7 @@ class OperationsBaseTestCase(BaseTestCase):
         exit_code: int = 0,
         cwd: Optional[Path] = PathUtils.get_project_root(),
     ) -> CommandResult:
-        result = self.executor.run([sys.executable, "-m", "githooklib"] + cmd, cwd=cwd)
+        result = self.executor.python_module("githooklib", cmd, cwd=cwd)
         self.assertEqual(
             success,
             result.success,

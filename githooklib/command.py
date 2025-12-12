@@ -1,5 +1,5 @@
 import subprocess
-from dataclasses import dataclass
+import sys
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -28,6 +28,31 @@ class CommandExecutor:
             cmd_list, normalized_cwd, capture_output, check, text, shell
         )
         return result
+
+    def python(
+        self,
+        cmd: List[str],
+        cwd: Optional[Union[str, Path]] = None,
+        capture_output: bool = True,
+        check: bool = False,
+        text: bool = True,
+        shell: bool = False,
+    ) -> CommandResult:
+        return self.run([sys.executable] + cmd, cwd, capture_output, check, text, shell)
+
+    def python_module(
+        self,
+        module: str,
+        cmd: List[str],
+        cwd: Optional[Union[str, Path]] = None,
+        capture_output: bool = True,
+        check: bool = False,
+        text: bool = True,
+        shell: bool = False,
+    ):
+        return self.python(
+            ["-m", module] + cmd, cwd, capture_output, check, text, shell
+        )
 
     def _normalize_command(
         self, command: Union[str, List[str]], shell: bool

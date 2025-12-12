@@ -8,7 +8,7 @@ logger = get_logger(__name__, "pre-commit")
 
 
 def _black_exists(command_executor: CommandExecutor) -> bool:
-    check_result = command_executor.run(["python", "-m", "black", "--version"])
+    check_result = command_executor.python_module("black", ["--version"])
     if check_result.exit_code == 127:
         return False
     if not check_result.success and "No module named" in check_result.stderr:
@@ -51,7 +51,7 @@ class BlackFormatterPreCommit(GitHook):
             )
 
         logger.info("Reformatting code with black...")
-        result = self.command_executor.run(["python", "-m", "black", "."])
+        result = self.command_executor.python_module("black", ["."])
 
         if not result.success:
             logger.error("Black formatting failed.")
