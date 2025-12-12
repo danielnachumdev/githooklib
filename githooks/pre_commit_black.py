@@ -37,7 +37,7 @@ class BlackFormatterPreCommit(GitHook):
 
     def __init__(
         self,
-        stage_changes: bool = False,
+        stage_changes: bool = True,
     ) -> None:
         super().__init__()
         self.stage_changes = stage_changes
