@@ -66,12 +66,8 @@ class GitHook(ABC):
 
     def run(self) -> int:
         hook_name = self.get_hook_name()
-        self.logger.info(
-            "You can run this hook manually using: githooks run %s with optional flags --debug or --trace to see more information",
-            hook_name,
-        )
         try:
-            context = GitHookContext.from_stdin(hook_name)
+            context = GitHookContext.from_argv(hook_name)
             result = self.execute(context)
             return result.exit_code
         except Exception as e:  # pylint: disable=broad-exception-caught

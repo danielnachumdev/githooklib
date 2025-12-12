@@ -5,13 +5,10 @@ from .base_test_case import OperationsBaseTestCase
 
 class TestUninstallE2E(OperationsBaseTestCase):
     def test_uninstall(self):
-        available_hooks = set(
-            hook.strip()[2:]
-            for hook in self.githooklib(["list"]).stdout.splitlines()[1:-1]
-        )
+        available_hooks = set(self.list())
         installed_hooks = set(
-            hook.strip()[2:].strip("(githooklib)").strip()
-            for hook in self.githooklib(["show"]).stdout.splitlines()[1:-1]
+            hook.strip("(githooklib)").strip()
+            for hook in self.show()
             if "external" not in hook
         )
         checkable_hooks = installed_hooks.intersection(available_hooks)

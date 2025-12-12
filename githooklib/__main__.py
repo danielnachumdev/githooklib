@@ -36,6 +36,9 @@ from .utils import FireGetResultMock
 
 def main() -> None:
     _setup_logging()
+    logger.info(
+        "Any githooklib command can be run with --debug or --trace flags for extra information."
+    )
     logger.trace("platform: %s", platform.platform())
     logger.trace("interpreter: %s", sys.executable)
     root = ProjectRootGateway.find_project_root()

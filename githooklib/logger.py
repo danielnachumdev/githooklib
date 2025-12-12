@@ -25,11 +25,28 @@ _DISPLAY_NAME_MAP: Dict[str, str] = {}
 _ROOT_LOGGER_INITIALIZED = False
 
 
+def _is_from_githooklib(record: logging.LogRecord) -> bool:
+    pathname = os.path.normcase(record.pathname)
+    return "githooklib" in pathname
+
+
 class DisplayNameFormatter(logging.Formatter):
+    def __init__(
+        self, fmt: Optional[str] = None, datefmt: Optional[str] = None
+    ) -> None:
+        super().__init__(fmt, datefmt)
+        self.default_formatter = logging.Formatter(
+            "%(levelname)-7s %(asctime)s %(name)s:%(lineno)d | %(message)s",
+            datefmt=datefmt or "%Y-%m-%d %H:%M:%S",
+        )
+
     def format(self, record: logging.LogRecord) -> str:
-        display_name = _DISPLAY_NAME_MAP.get(record.name, "githooklib")
-        record.display_name = display_name
-        return super().format(record)
+        if _is_from_githooklib(record):
+            display_name = _DISPLAY_NAME_MAP.get(record.name, "githooklib")
+            record.display_name = display_name
+            return super().format(record)
+        else:
+            return self.default_formatter.format(record)
 
 
 def _get_root_logger() -> logging.Logger:
