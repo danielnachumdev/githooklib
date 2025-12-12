@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 import tempfile
@@ -129,6 +130,85 @@ __all__ = ["{class_name}"]
 if __name__ == "__main__":
     sys.exit({class_name}().run())
 """
+
+    @staticmethod
+    def create_failing_hook(hook_name: str, error_message: Optional[str] = None) -> str:
+        if error_message is None:
+            error_message = f"{hook_name} hook failed"
+        class_name = "".join(
+            word.capitalize() for word in hook_name.replace("-", "_").split("_")
+        )
+        return f"""import sys
+
+from githooklib import GitHook, GitHookContext, HookResult
+
+
+class {class_name}(GitHook):
+    @classmethod
+    def get_hook_name(cls) -> str:
+        return "{hook_name}"
+
+    def execute(self, context: GitHookContext) -> HookResult:
+        self.logger.error("{error_message}")
+        return HookResult(success=False, message="{error_message}", exit_code=1)
+
+
+__all__ = ["{class_name}"]
+
+if __name__ == "__main__":
+    sys.exit({class_name}().run())
+"""
+
+    @staticmethod
+    def create_exception_hook(
+        hook_name: str, exception_message: Optional[str] = None
+    ) -> str:
+        if exception_message is None:
+            exception_message = f"Exception in {hook_name}"
+        class_name = "".join(
+            word.capitalize() for word in hook_name.replace("-", "_").split("_")
+        )
+        return f"""import sys
+
+from githooklib import GitHook, GitHookContext, HookResult
+
+
+class {class_name}(GitHook):
+    @classmethod
+    def get_hook_name(cls) -> str:
+        return "{hook_name}"
+
+    def execute(self, context: GitHookContext) -> HookResult:
+        raise RuntimeError("{exception_message}")
+
+
+__all__ = ["{class_name}"]
+
+if __name__ == "__main__":
+    sys.exit({class_name}().run())
+"""
+
+    def verify_hook_installed(self, root: Path, hook_name: str) -> None:
+        hook_path = self.get_installed_hooks_path(root) / hook_name
+        self.assertTrue(hook_path.exists(), f"Hook file {hook_path} should exist")
+        self.assertTrue(hook_path.is_file(), f"Hook file {hook_path} should be a file")
+        self.assertTrue(
+            os.access(hook_path, os.X_OK), f"Hook file {hook_path} should be executable"
+        )
+
+    def verify_hook_uninstalled(self, root: Path, hook_name: str) -> None:
+        hook_path = self.get_installed_hooks_path(root) / hook_name
+        self.assertFalse(hook_path.exists(), f"Hook file {hook_path} should not exist")
+
+    def create_external_hook(
+        self,
+        root: Path,
+        hook_name: str,
+        content: str = "#!/bin/sh\necho 'External hook'\n",
+    ) -> None:
+        hook_path = self.get_installed_hooks_path(root) / hook_name
+        hook_path.write_text(content)
+        hook_path.chmod(0o755)
 
 
 __all__ = ["OperationsBaseTestCase"]
