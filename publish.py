@@ -9,10 +9,10 @@ from quickpub import (
     GithubUploadTarget,
     PypircUploadTarget,
     SetuptoolsBuildSchema,
-    UnittestRunner,
     MypyRunner,
     PylintRunner,
     CondaPythonProvider,
+    PytestRunner,
 )
 from tqdm import tqdm
 from githooklib.__main__ import main as entry_point
@@ -41,10 +41,10 @@ def main() -> None:
         global_quality_assurance_runners=[
             MypyRunner(bound="<=0", configuration_path="./mypy.ini"),
             PylintRunner(bound=">=0.95", configuration_path="./.pylintrc"),
-            UnittestRunner(bound=">=0.95"),
+            PytestRunner(bound=">=0.95"),
         ],
         scripts={"githooklib": entry_point, "githooks": entry_point},
-        pbar=tqdm(desc="QA", leave=False),  # type: ignore
+        pbar=tqdm(desc="QA", leave=False),  # type: ignore,
     )
 
 

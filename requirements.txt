@@ -1,5 +1,8 @@
-quickpub
+quickpub>=4.0.0
 tqdm
 setuptools
 fire==0.7.1
 black
+pytest
+pytest-cov
+pytest-xdist
