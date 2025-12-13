@@ -30,6 +30,17 @@ def _is_from_githooklib(record: logging.LogRecord) -> bool:
     return "githooklib" in pathname
 
 
+def _is_from_hook_file(record: logging.LogRecord) -> bool:
+    pathname = os.path.normcase(record.pathname)
+    filename = os.path.basename(pathname)
+    return "githooks" in pathname or filename.endswith("_hook.py")
+
+
+class GithooklibFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.name.startswith("githooklib") or _is_from_hook_file(record)
+
+
 class DisplayNameFormatter(logging.Formatter):
     def __init__(
         self, fmt: Optional[str] = None, datefmt: Optional[str] = None
@@ -59,6 +70,7 @@ def _get_root_logger() -> logging.Logger:
             datefmt="%Y-%m-%d %H:%M:%S",
         )
         handler.setFormatter(formatter)
+        handler.addFilter(GithooklibFilter())
         handler.setLevel(logging.INFO)
         root_logger.addHandler(handler)
         root_logger.setLevel(logging.INFO)
