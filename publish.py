@@ -44,7 +44,8 @@ def main() -> None:
             PytestRunner(bound=">=0.95"),
         ],
         scripts={"githooklib": entry_point, "githooks": entry_point},
-        pbar=tqdm(desc="QA", leave=False),  # type: ignore,
+        pbar=tqdm(desc="QA", leave=False),  # type: ignore[arg-type]
+        demo=True,
     )
 
 
