@@ -19,40 +19,72 @@ class GitHook(ABC):
 
     @staticmethod
     def _write_script_file(hook_script_path: Path, script_content: str) -> None:
+        logger = get_logger()
+        logger.trace("Writing script file to: %s", hook_script_path)
+        logger.trace("Script content length: %d characters", len(script_content))
         hook_script_path.write_text(script_content)
+        logger.trace("Script file written successfully")
 
     @staticmethod
     def _make_script_executable(hook_script_path: Path) -> None:
+        logger = get_logger()
+        logger.trace("Making script executable: %s", hook_script_path)
         hook_script_path.chmod(0o755)
+        logger.trace("Script made executable (mode 0o755)")
 
     def _generate_delegator_script(self) -> str:
+        hook_name = self.get_hook_name()
+        self.logger.trace("Generating delegator script for hook '%s'", hook_name)
         project_root = str(ProjectRootGateway.find_project_root())
         python_executable = sys.executable
-        return DELEGATOR_SCRIPT_TEMPLATE.format(
-            hook_name=self.get_hook_name(),
+        self.logger.trace(
+            "Project root: %s, Python executable: %s", project_root, python_executable
+        )
+        script = DELEGATOR_SCRIPT_TEMPLATE.format(
+            hook_name=hook_name,
             project_root=project_root.replace("\\", "\\\\"),
             python_executable=python_executable.replace("\\", "\\\\"),
         )
+        self.logger.trace("Delegator script generated")
+        return script
 
     @classmethod
     def __init_subclass__(cls, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
+        logger = get_logger()
+        logger.trace("Registering hook subclass: %s", cls.__name__)
         GitHook._registered_hooks.append(cls)
-        cls.logger = get_logger(__name__, cls.get_hook_name())
+        hook_name = cls.get_hook_name()
+        logger.trace("Hook name for %s: %s", cls.__name__, hook_name)
+        cls.logger = get_logger(__name__, hook_name)
+        logger.trace("Hook subclass registered: %s -> %s", cls.__name__, hook_name)
 
     @classmethod
     def get_registered_hooks(cls) -> List[Type["GitHook"]]:
-        return cls._registered_hooks.copy()
+        logger = get_logger()
+        hooks = cls._registered_hooks.copy()
+        logger.trace("Retrieved %d registered hooks", len(hooks))
+        return hooks
 
     @classmethod
     def _get_module_and_class(cls) -> Tuple[str, str]:
+        logger = get_logger()
         module_name = cls.__module__
         class_name = cls.__name__
+        logger.trace(
+            "Getting module and class for %s: module=%s, class=%s",
+            cls.__name__,
+            module_name,
+            class_name,
+        )
         return module_name, class_name
 
     @classmethod
     def get_log_level(cls) -> int:
-        return logging.INFO
+        logger = get_logger()
+        log_level = logging.INFO
+        logger.trace("Getting log level for %s: %s", cls.__name__, log_level)
+        return log_level
 
     @classmethod
     @abstractmethod
@@ -62,15 +94,31 @@ class GitHook(ABC):
     def execute(self, context: GitHookContext) -> HookResult: ...
 
     def __init__(self) -> None:
+        hook_name = self.get_hook_name()
+        self.logger.trace("Initializing hook instance: %s", hook_name)
         self.command_executor = CommandExecutor()
+        self.logger.trace("Hook instance initialized: %s", hook_name)
 
     def run(self) -> int:
         hook_name = self.get_hook_name()
+        self.logger.debug("Running hook '%s'", hook_name)
         try:
+            self.logger.trace("Creating hook context from argv")
             context = GitHookContext.from_argv(hook_name)
+            self.logger.trace(
+                "Hook context: hook_name=%s, argv=%s", context.hook_name, context.argv
+            )
+            self.logger.debug("Executing hook '%s'", hook_name)
             result = self.execute(context)
+            self.logger.debug(
+                "Hook '%s' execution completed with exit code %d",
+                hook_name,
+                result.exit_code,
+            )
+            self.logger.trace("Hook result: exit_code=%d", result.exit_code)
             return result.exit_code
         except Exception as e:  # pylint: disable=broad-exception-caught
+            self.logger.debug("Exception occurred during hook execution: %s", e)
             self._handle_error(e)
             return EXIT_FAILURE
 
@@ -79,53 +127,95 @@ class GitHook(ABC):
         self.logger.error(traceback.format_exc())
 
     def install(self) -> bool:
+        hook_name = self.get_hook_name()
+        self.logger.debug("Installing hook '%s'", hook_name)
         hooks_dir = self._validate_installation_prerequisites()
         if not hooks_dir:
             self.logger.warning("Installation prerequisites validation failed")
+            self.logger.debug(
+                "Cannot install hook '%s': prerequisites not met", hook_name
+            )
             return False
-        hook_name = self.get_hook_name()
+        self.logger.trace("Hooks directory validated: %s", hooks_dir)
         project_root = ProjectRootGateway.find_project_root()
         if not project_root:
             self.logger.error("Could not find project root")
+            self.logger.debug(
+                "Cannot install hook '%s': project root not found", hook_name
+            )
             return False
+        self.logger.trace("Project root: %s", project_root)
         hook_script_path = hooks_dir / hook_name
+        self.logger.trace("Hook script path: %s", hook_script_path)
+        self.logger.debug("Generating delegator script for hook '%s'", hook_name)
         script_content = self._generate_delegator_script()
+        self.logger.trace(
+            "Delegator script generated, length: %d characters", len(script_content)
+        )
+        self.logger.debug("Writing hook delegation script to %s", hook_script_path)
         return self._write_hook_delegation_script(hook_script_path, script_content)
 
     def _validate_installation_prerequisites(self) -> Optional[Path]:
+        self.logger.debug("Validating installation prerequisites")
         git_root = GitGateway.get_git_root_path()
+        self.logger.trace("Git root: %s", git_root)
         if not git_root:
             self.logger.error("Not a git repository")
+            self.logger.debug("Installation prerequisites failed: not a git repository")
             return None
         hooks_dir = git_root / "hooks"
+        self.logger.trace("Hooks directory: %s", hooks_dir)
         if not hooks_dir.exists():
             self.logger.error("Hooks directory not found: %s", hooks_dir)
+            self.logger.debug(
+                "Installation prerequisites failed: hooks directory does not exist"
+            )
             return None
+        self.logger.debug("Installation prerequisites validated successfully")
         return hooks_dir
 
     def uninstall(self) -> bool:
+        hook_name = self.get_hook_name()
+        self.logger.debug("Uninstalling hook '%s'", hook_name)
         git_root = GitGateway.get_git_root_path()
+        self.logger.trace("Git root: %s", git_root)
         if not git_root:
             self.logger.error("Not a git repository")
+            self.logger.debug(
+                "Cannot uninstall hook '%s': not a git repository", hook_name
+            )
             return False
-        hook_script_path = git_root / "hooks" / self.get_hook_name()
+        hook_script_path = git_root / "hooks" / hook_name
+        self.logger.trace("Hook script path: %s", hook_script_path)
         if not hook_script_path.exists():
             self.logger.warning("Hook script not found: %s", hook_script_path)
+            self.logger.debug(
+                "Cannot uninstall hook '%s': script file does not exist", hook_name
+            )
             return False
         try:
+            self.logger.debug("Removing hook script file: %s", hook_script_path)
             hook_script_path.unlink()
-            self.logger.success("Uninstalled hook: %s", self.get_hook_name())
+            self.logger.success("Uninstalled hook: %s", hook_name)
+            self.logger.debug(
+                "Hook '%s' uninstallation completed successfully", hook_name
+            )
             return True
         except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error("Failed to uninstall hook: %s", e)
+            self.logger.trace("Exception details: %s", e, exc_info=True)
+            self.logger.debug("Hook '%s' uninstallation failed", hook_name)
             return False
 
     def _log_project_root_not_found(self, module_name: str) -> None:
+        self.logger.debug("Logging project root not found for module: %s", module_name)
         module_file_path = ModuleImportGateway.convert_module_name_to_file_path(
             module_name
         )
+        self.logger.trace("Module file path: %s", module_file_path)
         current = Path.cwd()
         searched_paths = [current] + list(current.parents)
+        self.logger.trace("Searched paths: %s", searched_paths)
         full_module_path = current.resolve() / module_file_path
         searched_dirs = ", ".join(str(p.resolve()) for p in searched_paths)
         self.logger.error(
@@ -138,16 +228,27 @@ class GitHook(ABC):
             current.resolve(),
             searched_dirs,
         )
+        self.logger.trace("Project root not found error logged")
 
     def _write_hook_delegation_script(
         self, hook_script_path: Path, script_content: str
     ) -> bool:
+        hook_name = self.get_hook_name()
+        self.logger.debug("Writing hook delegation script to %s", hook_script_path)
+        self.logger.trace("Script content length: %d characters", len(script_content))
         try:
+            self.logger.trace("Writing script file")
             self._write_script_file(hook_script_path, script_content)
+            self.logger.trace("Making script executable")
             self._make_script_executable(hook_script_path)
+            self.logger.debug(
+                "Hook '%s' installation completed successfully", hook_name
+            )
             return True
         except Exception as e:  # pylint: disable=broad-exception-caught
             self.logger.error("Failed to install hook: %s", e)
+            self.logger.trace("Exception details: %s", e, exc_info=True)
+            self.logger.debug("Hook '%s' installation failed", hook_name)
             return False
 
 

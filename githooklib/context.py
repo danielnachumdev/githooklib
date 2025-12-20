@@ -17,8 +17,15 @@ class GitHookContext:
 
     @classmethod
     def from_argv(cls, hook_name: str) -> "GitHookContext":
-        logger.trace("debug: %s", sys.argv)
-        return cls(hook_name=hook_name, argv=sys.argv)
+        logger.debug("Creating GitHookContext from argv for hook '%s'", hook_name)
+        logger.trace("sys.argv: %s", sys.argv)
+        context = cls(hook_name=hook_name, argv=sys.argv)
+        logger.trace(
+            "GitHookContext created: hook_name=%s, project_root=%s",
+            context.hook_name,
+            context.project_root,
+        )
+        return context
 
 
 __all__ = ["GitHookContext"]

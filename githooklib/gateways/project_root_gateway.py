@@ -13,12 +13,16 @@ class ProjectRootGateway:
     @staticmethod
     @lru_cache
     def find_project_root() -> Path:
+        logger.debug("Finding project root")
         git = GitGateway.get_git_root_path()
+        logger.trace("Git root path: %s", git)
         if not git:
             logger.error(UI_MESSAGE_COULD_NOT_FIND_GIT_REPOSITORY)
+            logger.debug("Git repository not found, cannot determine project root")
             raise GitHookLibException(UI_MESSAGE_COULD_NOT_FIND_GIT_REPOSITORY)
         result = git.parent
-        logger.trace("Project root: %s", result)
+        logger.debug("Project root: %s", result)
+        logger.trace("Project root resolved from git root: %s -> %s", git, result)
         return result
 
 
