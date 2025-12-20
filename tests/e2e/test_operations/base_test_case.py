@@ -99,7 +99,7 @@ class OperationsBaseTestCase(BaseTestCase):
                     "pre-push",
                 ]
             }
-        with tempfile.TemporaryDirectory(delete=True) as temp_dir_str:
+        with tempfile.TemporaryDirectory() as temp_dir_str:
             root = Path(temp_dir_str)
             if git:
                 self.git(["init"], cwd=root)
