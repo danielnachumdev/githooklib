@@ -37,13 +37,13 @@ class GitHook(ABC):
         self.logger.trace("Generating delegator script for hook '%s'", hook_name)
         project_root = str(ProjectRootGateway.find_project_root())
         python_executable = sys.executable
-        self.logger.trace(
-            "Project root: %s, Python executable: %s", project_root, python_executable
-        )
-        script = DELEGATOR_SCRIPT_TEMPLATE.format(
-            hook_name=hook_name,
+        from githooklib import __version__
+
+        return DELEGATOR_SCRIPT_TEMPLATE.format(
+            hook_name=self.get_hook_name(),
             project_root=project_root.replace("\\", "\\\\"),
             python_executable=python_executable.replace("\\", "\\\\"),
+            installed_version=__version__,
         )
         self.logger.trace("Delegator script generated")
         return script
