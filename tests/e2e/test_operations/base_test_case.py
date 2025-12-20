@@ -90,7 +90,7 @@ class OperationsBaseTestCase(BaseTestCase):
     @contextmanager
     def new_temp_project(
         self, hook_setup: Optional[Dict[str, str]] = None, git: bool = True
-    ) -> Generator[Path]:
+    ) -> Generator[Path, None, None]:
         if hook_setup is None:
             hook_setup = {
                 name: self.create_basic_hook(name)
