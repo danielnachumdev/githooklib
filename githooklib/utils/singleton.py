@@ -23,8 +23,8 @@ def singleton(cls: Type[T]) -> Type[T]:
                 original_init(self, *args, **kwargs)
             _initialized[cls] = True
 
-    cls.__new__ = __new__
-    cls.__init__ = __init__
+    setattr(cls, "__new__", __new__)
+    setattr(cls, "__init__", __init__)
 
     return cls
 

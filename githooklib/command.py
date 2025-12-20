@@ -6,7 +6,7 @@ from typing import List, Optional, Union
 from .definitions import CommandResult
 from .logger import get_logger
 from .utils.command_result_factory import CommandResultFactory
-from .utils import singleton
+from .utils.singleton import singleton
 
 logger = get_logger()
 

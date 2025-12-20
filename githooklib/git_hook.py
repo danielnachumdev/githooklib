@@ -45,8 +45,6 @@ class GitHook(ABC):
             python_executable=python_executable.replace("\\", "\\\\"),
             installed_version=__version__,
         )
-        self.logger.trace("Delegator script generated")
-        return script
 
     @classmethod
     def __init_subclass__(cls, **kwargs) -> None:
