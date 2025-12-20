@@ -1,7 +1,9 @@
-MINIMUM_COMPATIBLE_VERSION: str = "1.0.0"
+from typing import Tuple
+
+MINIMUM_COMPATIBLE_VERSION: str = "1.1.0"
 
 
-def _parse_version(version_str: str) -> tuple[int, int, int]:
+def _parse_version(version_str: str) -> Tuple[int, int, int]:
     parts = version_str.split(".")
     if len(parts) != 3:
         raise ValueError(
