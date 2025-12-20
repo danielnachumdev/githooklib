@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+from builtins import __import__
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -110,17 +111,39 @@ class TestModuleImportGateway(BaseTestCase):
             module_file = module_dir / "__init__.py"
             module_file.write_text("")
             relative_path = Path("test/module/__init__.py")
-            with patch("builtins.__import__") as mock_import:
+            original_import = __import__
+            call_count = 0
+            mock_module = MagicMock()
+
+            def side_effect(name, *args, **kwargs):
+                nonlocal call_count
+                if name == "test.module.__init__":
+                    call_count += 1
+                    return mock_module
+                return original_import(name, *args, **kwargs)
+
+            with patch("builtins.__import__", side_effect=side_effect):
                 self.gateway._import_relative_module(relative_path, base_dir)
-                mock_import.assert_called_once_with("test.module.__init__")
+                self.assertEqual(1, call_count)
 
     def test_import_absolute_module(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             module_file = Path(temp_dir) / "test_module.py"
             module_file.write_text("")
-            with patch("builtins.__import__") as mock_import:
+            original_import = __import__
+            call_count = 0
+            mock_module = MagicMock()
+
+            def side_effect(name, *args, **kwargs):
+                nonlocal call_count
+                if name == "test_module":
+                    call_count += 1
+                    return mock_module
+                return original_import(name, *args, **kwargs)
+
+            with patch("builtins.__import__", side_effect=side_effect):
                 self.gateway._import_absolute_module(module_file)
-                mock_import.assert_called_once_with("test_module")
+                self.assertEqual(1, call_count)
 
 
 if __name__ == "__main__":
