@@ -1,4 +1,5 @@
 import sys
+from typing import Optional, List
 
 from githooklib import GitHook, GitHookContext, HookResult, get_logger
 from githooks.steps import run_mypy_type_check
@@ -7,6 +8,10 @@ logger = get_logger(__name__, "pre-push")
 
 
 class PrePush(GitHook):
+    @classmethod
+    def get_file_patterns(cls) -> Optional[List[str]]:
+        return ["*.py"]
+
     @classmethod
     def get_hook_name(cls) -> str:
         return "pre-push"

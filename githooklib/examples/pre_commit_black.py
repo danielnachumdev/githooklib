@@ -1,5 +1,6 @@
 import sys
 from enum import Enum
+from typing import Optional, List
 
 from githooklib import GitHook, GitHookContext, HookResult
 from githooklib.command import CommandExecutor, CommandResult
@@ -47,6 +48,10 @@ class BlackFormatterPreCommit(GitHook):
     class StagePolicy(str, Enum):
         ALL = "all_tracked"
         CHANGED_FILES_ONLY = "previously_staged"
+
+    @classmethod
+    def get_file_patterns(cls) -> Optional[List[str]]:
+        return ["*.py"]
 
     @classmethod
     def get_hook_name(cls) -> str:

@@ -14,7 +14,8 @@ class ProjectRootGateway:
     @lru_cache
     def find_project_root() -> Path:
         logger.debug("Finding project root")
-        git = GitGateway.get_git_root_path()
+        git_gateway = GitGateway()
+        git = git_gateway.get_git_root_path()
         logger.trace("Git root path: %s", git)
         if not git:
             logger.error(UI_MESSAGE_COULD_NOT_FIND_GIT_REPOSITORY)

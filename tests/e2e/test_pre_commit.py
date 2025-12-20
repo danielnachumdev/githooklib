@@ -23,6 +23,10 @@ class TestPreCommit(unittest.TestCase):
             def get_hook_name(cls) -> str:
                 return "pre-commit"
 
+            @classmethod
+            def get_file_patterns(cls):
+                return None
+
             def execute(self, context: GitHookContext) -> HookResult:
                 return HookResult(success=True)
 

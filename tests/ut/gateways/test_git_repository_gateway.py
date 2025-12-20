@@ -5,6 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from githooklib.constants import EXIT_FAILURE
+from githooklib.definitions import CommandResult
 from githooklib.gateways import GitGateway
 from tests.base_test_case import BaseTestCase
 
@@ -14,20 +16,39 @@ class TestGitRepositoryGateway(BaseTestCase):
         self.gateway = GitGateway()
 
     def test_find_git_root_via_command_subprocess_fails_returns_none(self):
+        from githooklib.definitions import CommandResult
+        from githooklib.constants import EXIT_FAILURE
+
         with self.subTest("file_not_found_error"):
-            with patch("subprocess.run", side_effect=FileNotFoundError()):
-                result = GitGateway._find_git_root_via_command()
+            failed_result = CommandResult(
+                success=False,
+                exit_code=EXIT_FAILURE,
+                stdout="",
+                stderr="",
+                command=["git", "rev-parse", "--show-toplevel"],
+            )
+            with patch.object(
+                self.gateway.command_executor, "run", return_value=failed_result
+            ):
+                result = self.gateway._find_git_root_via_command()
                 self.assertIsNone(result)
 
-        with self.subTest("called_process_error"):
-            with patch(
-                "subprocess.run", side_effect=subprocess.CalledProcessError(1, "git")
+        with self.subTest("command_fails"):
+            failed_result = CommandResult(
+                success=False,
+                exit_code=EXIT_FAILURE,
+                stdout="",
+                stderr="",
+                command=["git", "rev-parse", "--show-toplevel"],
+            )
+            with patch.object(
+                self.gateway.command_executor, "run", return_value=failed_result
             ):
-                result = GitGateway._find_git_root_via_command()
+                result = self.gateway._find_git_root_via_command()
                 self.assertIsNone(result)
 
     def test_find_git_root_via_command_ends_with_githooklib(self):
-        result = GitGateway._find_git_root_via_command()
+        result = self.gateway._find_git_root_via_command()
         result = self.unwrap_optional(result)
         self.assertEqual("githooklib/.git", "/".join(result.parts[-2:]))
         self.assertTrue(result.exists())
@@ -37,55 +58,53 @@ class TestGitRepositoryGateway(BaseTestCase):
             original_cwd = os.getcwd()
             try:
                 os.chdir(temp_dir)
-                result = GitGateway._find_git_root_via_command()
+                result = self.gateway._find_git_root_via_command()
                 self.assertIsNone(result)
             finally:
                 os.chdir(original_cwd)
 
     def test_find_git_root_via_filesystem_ends_with_githooklib(self):
-        result = GitGateway._find_git_root_via_filesystem()
+        result = self.gateway._find_git_root_via_filesystem()
         result = self.unwrap_optional(result)
         self.assertEqual(result.name, "githooklib")
         self.assertTrue((result / ".git").exists())
 
     def test_find_git_root_via_filesystem_found_in_parent(self):
-        git_root = GitGateway.get_git_root_path()
+        git_root = self.gateway.get_git_root_path()
         git_root = self.unwrap_optional(git_root)
         original_cwd = os.getcwd()
         try:
             subdir = git_root / "tests" / "ut" / "gateways"
             subdir.mkdir(parents=True, exist_ok=True)
             os.chdir(subdir)
-            result = GitGateway._find_git_root_via_filesystem()
+            result = self.gateway._find_git_root_via_filesystem()
             self.assertIsNotNone(result)
         finally:
             os.chdir(original_cwd)
 
     def test_find_git_root_ends_with_githooklib(self):
-        result = GitGateway.get_git_root_path()
+        result = self.gateway.get_git_root_path()
         result = self.unwrap_optional(result)
         self.assertEqual("githooklib/.git", "/".join(result.parts[-2:]))
         self.assertTrue(result.exists())
 
     def test_find_git_root_no_repo_returns_none(self):
-        GitGateway.get_git_root_path.cache_clear()
+        self.gateway.get_git_root_path.cache_clear()
         with tempfile.TemporaryDirectory() as temp_dir:
             original_cwd = os.getcwd()
             try:
                 os.chdir(temp_dir)
-                with patch(
-                    "githooklib.gateways.git_gateway.GitGateway._find_git_root_via_command",
-                    return_value=None,
+                with patch.object(
+                    self.gateway, "_find_git_root_via_command", return_value=None
                 ):
-                    with patch(
-                        "githooklib.gateways.git_gateway.GitGateway._find_git_root_via_filesystem",
-                        return_value=None,
+                    with patch.object(
+                        self.gateway, "_find_git_root_via_filesystem", return_value=None
                     ):
-                        result = GitGateway.get_git_root_path()
+                        result = self.gateway.get_git_root_path()
                         self.assertIsNone(result)
             finally:
                 os.chdir(original_cwd)
-                GitGateway.get_git_root_path.cache_clear()
+                self.gateway.get_git_root_path.cache_clear()
 
     def test_is_hook_from_githooklib_true_for_correct(self):
         with tempfile.NamedTemporaryFile(
@@ -189,6 +208,76 @@ if __name__ == "__main__":
                 for hook_file in [githooklib_hook, regular_hook, sample_hook]:
                     if hook_file.exists():
                         hook_file.unlink()
+
+    def test_get_cached_index_files_returns_staged_files(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo = Path(temp_dir)
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(repo)
+                self._initialize_repo(repo)
+                test_file = repo / "test.py"
+                test_file.write_text("print('test')")
+                self._git(repo, ["add", "test.py"])
+                files = self.gateway.get_cached_index_files()
+                self.assertIn("test.py", files)
+            finally:
+                os.chdir(original_cwd)
+
+    def test_get_cached_index_files_no_staged_files_returns_empty(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo = Path(temp_dir)
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(repo)
+                self._initialize_repo(repo)
+                files = self.gateway.get_cached_index_files()
+                self.assertEqual(files, [])
+            finally:
+                os.chdir(original_cwd)
+
+    def test_get_diff_files_between_refs_returns_changed_files(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo = Path(temp_dir)
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(repo)
+                self._initialize_repo(repo)
+                test_file = repo / "test.py"
+                test_file.write_text("print('test')")
+                self._git(repo, ["add", "test.py"])
+                self._git(repo, ["commit", "-m", "initial"])
+                test_file.write_text("print('updated')")
+                self._git(repo, ["add", "test.py"])
+                self._git(repo, ["commit", "-m", "update"])
+                files = self.gateway.get_diff_files_between_refs("HEAD~1", "HEAD")
+                self.assertIn("test.py", files)
+            finally:
+                os.chdir(original_cwd)
+
+    def test_get_all_modified_files_returns_changed_files(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            repo = Path(temp_dir)
+            original_cwd = os.getcwd()
+            try:
+                os.chdir(repo)
+                self._initialize_repo(repo)
+                test_file = repo / "test.py"
+                test_file.write_text("print('test')")
+                files = self.gateway.get_all_modified_files()
+                self.assertIn("test.py", files)
+            finally:
+                os.chdir(original_cwd)
+
+    def _initialize_repo(self, repo: Path) -> None:
+        self._git(repo, ["init"])
+        self._git(repo, ["config", "user.email", "test@example.com"])
+        self._git(repo, ["config", "user.name", "Tester"])
+
+    def _git(self, repo: Path, args: list[str]) -> None:
+        result = subprocess.run(
+            ["git"] + args, cwd=repo, capture_output=True, text=True, check=True
+        )
 
 
 if __name__ == "__main__":

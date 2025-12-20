@@ -128,7 +128,9 @@ class {class_name}(GitHook):
     @classmethod
     def get_hook_name(cls) -> str:
         return "{hook_name}"
-
+    @classmethod
+    def get_file_patterns(cls):
+        pass
     def execute(self, context: GitHookContext) -> HookResult:
         self.logger.info("{print_content}")
         return HookResult(success=True, message="Hook executed successfully")
@@ -156,7 +158,9 @@ class {class_name}(GitHook):
     @classmethod
     def get_hook_name(cls) -> str:
         return "{hook_name}"
-
+    @classmethod
+    def get_file_patterns(cls):
+        pass
     def execute(self, context: GitHookContext) -> HookResult:
         self.logger.error("{error_message}")
         return HookResult(success=False, message="{error_message}", exit_code=1)
@@ -186,7 +190,9 @@ class {class_name}(GitHook):
     @classmethod
     def get_hook_name(cls) -> str:
         return "{hook_name}"
-
+    @classmethod
+    def get_file_patterns(cls):
+        pass
     def execute(self, context: GitHookContext) -> HookResult:
         raise RuntimeError("{exception_message}")
 

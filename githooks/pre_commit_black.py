@@ -1,4 +1,5 @@
 import sys
+from typing import Optional, List
 
 from githooklib import GitHook, GitHookContext, HookResult
 from githooklib.command import CommandExecutor, CommandResult
@@ -31,6 +32,10 @@ def _stage_files(command_executor: CommandExecutor, files: list[str]) -> Command
 
 
 class BlackFormatterPreCommit(GitHook):
+    @classmethod
+    def get_file_patterns(cls) -> Optional[List[str]]:
+        return ["*.py"]
+
     @classmethod
     def get_hook_name(cls) -> str:
         return "pre-commit"

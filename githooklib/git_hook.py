@@ -3,6 +3,7 @@ from typing import Optional, List, Type, Tuple
 import traceback
 import logging
 import sys
+import fnmatch
 from pathlib import Path
 
 from .constants import DELEGATOR_SCRIPT_TEMPLATE, EXIT_SUCCESS, EXIT_FAILURE
@@ -81,10 +82,91 @@ class GitHook(ABC):
 
     @classmethod
     @abstractmethod
-    def get_hook_name(cls) -> str: ...
+    def get_hook_name(cls) -> str:
+        """
+        Return the name of the Git hook this class implements.
+
+        This method must return the exact name of the Git hook (e.g., "pre-commit",
+        "pre-push", "post-merge"). The hook name determines when Git will invoke
+        this hook during the Git workflow.
+
+        Returns:
+            str: The Git hook name (e.g., "pre-commit", "pre-push", "post-merge").
+
+        Examples:
+            For a pre-commit hook:
+                return "pre-commit"
+
+            For a pre-push hook:
+                return "pre-push"
+        """
+
+    @classmethod
+    @abstractmethod
+    def get_file_patterns(cls) -> Optional[List[str]]:
+        """
+        Return file patterns to determine when this hook should run.
+
+        This method allows hooks to conditionally execute based on which files
+        have changed. The hook will only run if at least one changed file matches
+        any of the specified patterns.
+
+        Returns:
+            Optional[List[str]]: A list of glob patterns (e.g., ["*.py", "src/**/*.ts"]).
+                - Return None to always run the hook (no conditional execution).
+                - Return an empty list [] to always run the hook.
+                - Return a list of patterns to run only when matching files change.
+
+        Examples:
+            To run only when Python files change:
+                return ["*.py"]
+
+            To run only when Python or TypeScript files change:
+                return ["*.py", "src/**/*.ts"]
+
+            To always run (no conditional execution):
+                return None
+
+        Note:
+            Patterns use fnmatch syntax. The hook checks changed files based on
+            hook type: staged files for pre-commit, diff between refs for pre-push,
+            or all modified files for other hooks.
+        """
 
     @abstractmethod
-    def execute(self, context: GitHookContext) -> HookResult: ...
+    def execute(self, context: GitHookContext) -> HookResult:
+        """
+        Execute the hook logic.
+
+        This method contains the main logic for the Git hook. It is called when
+        the hook is triggered by Git, after checking file patterns (if specified).
+
+        Args:
+            context: The GitHookContext containing hook information, command-line
+                arguments, project root, and ref information (for pre-push hooks).
+
+        Returns:
+            HookResult: A result object indicating success/failure, optional message,
+                and exit code. The exit code determines whether Git should proceed
+                (0) or abort the operation (non-zero).
+
+        Examples:
+            A simple hook that always succeeds:
+                return HookResult(success=True, message="All checks passed!")
+
+            A hook that fails with a message:
+                return HookResult(
+                    success=False,
+                    message="Tests failed. Commit aborted.",
+                    exit_code=1
+                )
+
+        Note:
+            - The hook will only be executed if file patterns match (if specified).
+            - Use self.command_executor to run shell commands.
+            - Use self.logger for logging messages.
+        """
+        ...
 
     def __init__(self) -> None:
         hook_name = self.get_hook_name()
@@ -100,6 +182,14 @@ class GitHook(ABC):
             self.logger.trace(
                 "Hook context: hook_name=%s, argv=%s", context.hook_name, context.argv
             )
+
+            if not self._should_run_based_on_patterns(context):
+                self.logger.debug(
+                    "Hook '%s' skipped: no changed files match the specified patterns",
+                    hook_name,
+                )
+                return EXIT_SUCCESS
+
             self.logger.debug("Executing hook '%s'", hook_name)
             result = self.execute(context)
             self.logger.debug(
@@ -117,6 +207,39 @@ class GitHook(ABC):
     def _handle_error(self, error: Exception) -> None:
         self.logger.error("Unexpected error in hook: %s", error)
         self.logger.error(traceback.format_exc())
+
+    def _should_run_based_on_patterns(self, context: GitHookContext) -> bool:
+        patterns = self.get_file_patterns()
+        if patterns is None:
+            self.logger.trace("No file patterns specified, hook will run")
+            return True
+
+        if not patterns:
+            self.logger.trace("Empty file patterns list, hook will run")
+            return True
+
+        changed_files = context.get_changed_files()
+        if not changed_files:
+            self.logger.trace("No changed files found, hook will not run")
+            return False
+
+        self.logger.trace(
+            "Checking %d changed files against %d patterns",
+            len(changed_files),
+            len(patterns),
+        )
+        for file_path in changed_files:
+            for pattern in patterns:
+                if fnmatch.fnmatch(file_path, pattern):
+                    self.logger.trace(
+                        "File '%s' matches pattern '%s', hook will run",
+                        file_path,
+                        pattern,
+                    )
+                    return True
+
+        self.logger.trace("No changed files match any pattern, hook will not run")
+        return False
 
     def install(self) -> bool:
         hook_name = self.get_hook_name()
@@ -149,7 +272,8 @@ class GitHook(ABC):
 
     def _validate_installation_prerequisites(self) -> Optional[Path]:
         self.logger.debug("Validating installation prerequisites")
-        git_root = GitGateway.get_git_root_path()
+        git_gateway = GitGateway()
+        git_root = git_gateway.get_git_root_path()
         self.logger.trace("Git root: %s", git_root)
         if not git_root:
             self.logger.error("Not a git repository")
@@ -169,7 +293,8 @@ class GitHook(ABC):
     def uninstall(self) -> bool:
         hook_name = self.get_hook_name()
         self.logger.debug("Uninstalling hook '%s'", hook_name)
-        git_root = GitGateway.get_git_root_path()
+        git_gateway = GitGateway()
+        git_root = git_gateway.get_git_root_path()
         self.logger.trace("Git root: %s", git_root)
         if not git_root:
             self.logger.error("Not a git repository")
