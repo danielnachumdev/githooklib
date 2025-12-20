@@ -33,6 +33,16 @@ def print_error(message: str) -> None:
 
 
 class CLI:
+    """Command-line interface for githooklib.
+
+    This class provides a command-line interface for managing Git hooks in Python
+    projects. It enables discovery, installation, uninstallation, and execution of
+    Git hooks defined in the project. Hooks are automatically discovered from the
+    'githooks' directory or project root.
+
+    All commands support --debug flag for additional logging
+    information.
+    """
 
     def __init__(self) -> None:
         logger.debug("Initializing CLI")

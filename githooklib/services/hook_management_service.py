@@ -6,6 +6,7 @@ from typing import Optional
 from ..constants import EXIT_FAILURE
 from ..gateways.git_gateway import GitGateway
 from ..logger import get_logger
+from ..utils.singleton import singleton
 from .hook_discovery_service import HookDiscoveryService
 
 logger = get_logger()
@@ -18,9 +19,9 @@ class InstalledHooksContext:
     hooks_dir_exists: bool
 
 
+@singleton
 class HookManagementService:
     def __init__(self) -> None:
-        logger.debug("Initializing HookManagementService")
         self.hook_discovery_service = HookDiscoveryService()
         self.git_gateway = GitGateway()
         logger.trace("HookManagementService initialized")
@@ -64,7 +65,6 @@ class HookManagementService:
         return success
 
     def run_hook(self, hook_name: str) -> int:
-        logger.debug("Running hook '%s'", hook_name)
         hooks = self.hook_discovery_service.discover_hooks()
         if hook_name not in hooks:
             logger.warning("Hook '%s' not found in discovered hooks", hook_name)
@@ -73,11 +73,7 @@ class HookManagementService:
         hook_class = hooks[hook_name]
         logger.trace("Hook class for '%s': %s", hook_name, hook_class.__name__)
         hook = hook_class()
-        logger.debug("Calling run() on hook '%s'", hook_name)
         exit_code = hook.run()
-        logger.debug(
-            "Hook '%s' execution completed with exit code %d", hook_name, exit_code
-        )
         return exit_code
 
     def get_installed_hooks_with_context(self) -> InstalledHooksContext:

@@ -6,14 +6,15 @@ from ..definitions import SeedFailureDetails
 from ..constants import TARGET_HOOKS_DIR
 from ..gateways.seed_gateway import SeedGateway
 from ..logger import get_logger
+from ..utils.singleton import singleton
 
 logger = get_logger()
 
 
+@singleton
 class HookSeedingService:
 
     def __init__(self) -> None:
-        logger.debug("Initializing HookSeedingService")
         self.examples_gateway = SeedGateway()
         logger.trace("HookSeedingService initialized")
 

@@ -4,10 +4,12 @@ from pathlib import Path
 from typing import Optional, Dict
 
 from ..logger import get_logger
+from ..utils import singleton
 
 logger = get_logger()
 
 
+@singleton
 class GitGateway:
     @staticmethod
     @lru_cache

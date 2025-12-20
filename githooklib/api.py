@@ -29,6 +29,7 @@ class API:
         self.seed_gateway = SeedGateway()
         logger.trace("API initialized with all services and gateways")
 
+    @lru_cache
     def discover_all_hooks(self) -> dict[str, type[GitHook]]:
         logger.debug("Discovering all hooks")
         hooks = self.hook_discovery_service.discover_hooks()
@@ -36,6 +37,7 @@ class API:
         logger.trace("Discovered hooks: %s", list(hooks.keys()))
         return hooks
 
+    @lru_cache
     def list_available_hook_names(self) -> list[str]:
         logger.debug("Listing available hook names")
         hook_names = self.hook_management_service.list_hooks()
@@ -45,7 +47,6 @@ class API:
 
     @lru_cache
     def check_hook_exists(self, hook_name: str) -> bool:
-        logger.debug("Checking if hook '%s' exists", hook_name)
         exists = self.hook_discovery_service.hook_exists(hook_name)
         logger.debug("Hook '%s' exists: %s", hook_name, exists)
         return exists
@@ -69,9 +70,7 @@ class API:
         return success
 
     def run_hook_by_name(self, hook_name: str) -> int:
-        logger.debug("Running hook '%s'", hook_name)
         exit_code = self.hook_management_service.run_hook(hook_name)
-        logger.debug("Hook '%s' completed with exit code %d", hook_name, exit_code)
         logger.trace("Hook '%s' execution finished", hook_name)
         return exit_code
 

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from ..logger import get_logger
+from ..utils.singleton import singleton
 from ..ui_messages import (
     UI_MESSAGE_HOOK_NOT_FOUND_PREFIX,
     UI_MESSAGE_HOOK_NOT_FOUND_SUFFIX,
@@ -11,6 +12,7 @@ from .hook_discovery_service import HookDiscoveryService
 logger = get_logger()
 
 
+@singleton
 class ErrorMessageService:
 
     @staticmethod
@@ -41,7 +43,6 @@ class ErrorMessageService:
             error_lines.append(f"  - {search_dir} (no .py files found)")
 
     def __init__(self) -> None:
-        logger.debug("Initializing ErrorMessageService")
         self.hook_discovery_service = HookDiscoveryService()
         logger.trace("ErrorMessageService initialized")
 

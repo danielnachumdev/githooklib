@@ -12,10 +12,7 @@ from unittest.mock import patch
 from githooklib.gateways import ProjectRootGateway
 from githooklib import get_logger
 from githooklib.logger import TRACE
-from githooklib.ui_messages import (
-    UI_MESSAGE_STARTUP_INFO,
-    UI_MESSAGE_COULD_NOT_FIND_PROJECT_ROOT,
-)
+from githooklib.ui_messages import UI_MESSAGE_COULD_NOT_FIND_PROJECT_ROOT
 
 logger = get_logger(__name__)
 
@@ -40,7 +37,6 @@ if platform.system() != "Windows":
 
 def main() -> None:
     _setup_logging()
-    logger.info(UI_MESSAGE_STARTUP_INFO)
     logger.trace("platform: %s", platform.platform())
     logger.trace("interpreter: %s", sys.executable)
     logger.trace("sys.argv: %s", sys.argv)

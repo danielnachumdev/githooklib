@@ -6,10 +6,12 @@ from typing import List, Optional, Union
 from .definitions import CommandResult
 from .logger import get_logger
 from .utils.command_result_factory import CommandResultFactory
+from .utils import singleton
 
 logger = get_logger()
 
 
+@singleton
 class CommandExecutor:
 
     def run(  # pylint: disable=too-many-positional-arguments
@@ -21,7 +23,6 @@ class CommandExecutor:
         text: bool = True,
         shell: bool = False,
     ) -> CommandResult:
-        logger.debug("Running command")
         logger.trace(
             "Command: %s, cwd: %s, capture_output: %s, check: %s, text: %s, shell: %s",
             command,
@@ -40,7 +41,6 @@ class CommandExecutor:
         result = self._execute_command(
             cmd_list, normalized_cwd, capture_output, check, text, shell
         )
-        logger.debug("Command completed with exit code %d", result.exit_code)
         logger.trace(
             "Command result: exit_code=%d, stdout_length=%d, stderr_length=%d",
             result.exit_code,
@@ -58,7 +58,6 @@ class CommandExecutor:
         text: bool = True,
         shell: bool = False,
     ) -> CommandResult:
-        logger.debug("Running Python command")
         logger.trace("Python executable: %s, command: %s", sys.executable, cmd)
         full_command = [sys.executable] + cmd
         logger.trace("Full Python command: %s", full_command)
@@ -74,7 +73,6 @@ class CommandExecutor:
         text: bool = True,
         shell: bool = False,
     ):
-        logger.debug("Running Python module command")
         logger.trace("Module: %s, command: %s", module, cmd)
         full_command = ["-m", module] + cmd
         logger.trace("Full module command: %s", full_command)
@@ -119,7 +117,6 @@ class CommandExecutor:
             shell,
         )
         try:
-            logger.debug("Calling subprocess.run")
             return self._run_subprocess(
                 cmd_list, cwd, capture_output, check, text, shell
             )

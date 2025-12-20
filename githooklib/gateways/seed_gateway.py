@@ -4,17 +4,21 @@ from typing import List
 
 from ..constants import EXAMPLES_DIR
 from ..logger import get_logger
+from ..utils.singleton import singleton
 
 logger = get_logger()
 
 
+@singleton
 class SeedGateway:
 
+    @lru_cache
     def _get_githooklib_path(self) -> Path:
         path = Path(__file__).parent.parent
         logger.trace("Githooklib path: %s", path)
         return path
 
+    @lru_cache
     def _get_examples_folder_path(self) -> Path:
         examples_path = self._get_githooklib_path() / EXAMPLES_DIR
         logger.trace("Examples folder path: %s", examples_path)

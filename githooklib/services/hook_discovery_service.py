@@ -7,16 +7,17 @@ from ..git_hook import GitHook
 from ..gateways.project_root_gateway import ProjectRootGateway
 from ..gateways.module_import_gateway import ModuleImportGateway
 from ..logger import get_logger
+from ..utils.singleton import singleton
 
 logger = get_logger()
 
 
+@singleton
 class HookDiscoveryService:
     DEFAULT_HOOK_SEARCH_DIR = "githooks"
 
     @staticmethod
     def _collect_hook_classes_by_name() -> dict[str, list[type[GitHook]]]:
-        logger.debug("Collecting hook classes by name")
         hook_classes_by_name: dict[str, list[type[GitHook]]] = defaultdict(list)
         registered_hooks = GitHook.get_registered_hooks()
         logger.trace("Found %d registered hook classes", len(registered_hooks))
@@ -39,19 +40,15 @@ class HookDiscoveryService:
         return dict(hook_classes_by_name)
 
     def __init__(self) -> None:
-        logger.debug("Initializing HookDiscoveryService")
-        logger.trace("Finding project root")
         self.project_root = ProjectRootGateway.find_project_root()
         logger.trace("Project root: %s", self.project_root)
         self.hook_search_paths = [DEFAULT_HOOK_SEARCH_DIR]
         logger.trace("Default hook search paths: %s", self.hook_search_paths)
-        logger.trace("Creating ModuleImportGateway")
         self.module_import_gateway = ModuleImportGateway()
         self._hooks: Optional[dict[str, type[GitHook]]] = None
         logger.trace("HookDiscoveryService initialized")
 
     def discover_hooks(self) -> dict[str, type[GitHook]]:
-        logger.debug("Discovering hooks")
         if self._hooks is not None:
             logger.debug("Using cached hooks (%d hooks)", len(self._hooks))
             logger.trace("Cached hooks: %s", list(self._hooks.keys()))
@@ -60,12 +57,10 @@ class HookDiscoveryService:
             logger.debug("No project root found, returning empty hooks dict")
             return {}
 
-        logger.debug("Importing all hook modules")
+        logger.debug("Discovering hooks")
         self._import_all_hook_modules()
-        logger.debug("Collecting hook classes by name")
         hook_classes_by_name = self._collect_hook_classes_by_name()
         logger.trace("Hook classes by name: %s", list(hook_classes_by_name.keys()))
-        logger.debug("Validating no duplicate hooks")
         self._validate_no_duplicate_hooks(hook_classes_by_name)
         hooks = {name: classes[0] for name, classes in hook_classes_by_name.items()}
         logger.debug("Discovered %d unique hooks", len(hooks))
@@ -74,7 +69,6 @@ class HookDiscoveryService:
         return hooks
 
     def _find_hook_modules(self) -> list[Path]:
-        logger.debug("Finding hook modules")
         hook_modules = []
 
         if self.project_root:
@@ -134,13 +128,11 @@ class HookDiscoveryService:
         return exists
 
     def _import_all_hook_modules(self) -> None:
-        logger.debug("Importing all hook modules")
         hook_modules = self._find_hook_modules()
         logger.debug("Importing %d hook modules", len(hook_modules))
         for module_path in hook_modules:
             logger.trace("Importing module: %s", module_path)
             self.module_import_gateway.import_module(module_path, self.project_root)
-        logger.debug("Finished importing hook modules")
 
     def _validate_no_duplicate_hooks(
         self, hook_classes_by_name: dict[str, list[type[GitHook]]]

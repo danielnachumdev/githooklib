@@ -4,12 +4,15 @@ from pathlib import Path
 from typing import Optional
 
 from ..logger import get_logger
+from ..utils.singleton import singleton
 
 logger = get_logger()
 
 
+@singleton
 class ModuleImportGateway:
     @staticmethod
+    @lru_cache
     def find_module_file(
         module_name: str, project_root: Optional[Path]
     ) -> Optional[str]:
@@ -39,6 +42,7 @@ class ModuleImportGateway:
         return None
 
     @staticmethod
+    @lru_cache
     def convert_module_name_to_file_path(module_name: str) -> Path:
         logger.trace("Converting module name to file path: %s", module_name)
         module_path_parts = module_name.split(".")
@@ -66,13 +70,10 @@ class ModuleImportGateway:
         try:
             relative_path = module_path.relative_to(base_dir)
             logger.trace("Relative path: %s", relative_path)
-            logger.debug("Importing as relative module")
             self._import_relative_module(relative_path, base_dir)
         except ValueError as e:
             logger.trace("Cannot make relative path: %s, importing as absolute", e)
-            logger.debug("Importing as absolute module")
             self._import_absolute_module(module_path)
-        logger.debug("Module import completed: %s", module_path)
 
     def _import_relative_module(self, relative_path: Path, base_dir: Path) -> None:
         parts = relative_path.parts[:-1] + (relative_path.stem,)

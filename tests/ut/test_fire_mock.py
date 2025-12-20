@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 from githooklib.__main__ import main
 from githooklib.gateways.project_root_gateway import ProjectRootGateway
-from githooklib.ui_messages import UI_MESSAGE_STARTUP_INFO
 
 from tests.base_test_case import BaseTestCase
 
@@ -154,5 +153,4 @@ class TestFireMock(BaseTestCase):
     def test_list_returns_none_no_print_exit_zero(self):
         with patch("githooklib.cli.CLI.list", return_value=None):
             exit_code, stdout, stderr = self.runner.run_module_command(["list"])
-            self.assertIn(UI_MESSAGE_STARTUP_INFO, stdout)
             self.assertEqual(0, exit_code)
