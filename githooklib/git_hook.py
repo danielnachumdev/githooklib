@@ -52,19 +52,14 @@ class GitHook(ABC):
     def __init_subclass__(cls, **kwargs) -> None:
         super().__init_subclass__(**kwargs)
         logger = get_logger()
-        logger.trace("Registering hook subclass: %s", cls.__name__)
         GitHook._registered_hooks.append(cls)
         hook_name = cls.get_hook_name()
-        logger.trace("Hook name for %s: %s", cls.__name__, hook_name)
         cls.logger = get_logger(__name__, hook_name)
         logger.trace("Hook subclass registered: %s -> %s", cls.__name__, hook_name)
 
     @classmethod
     def get_registered_hooks(cls) -> List[Type["GitHook"]]:
-        logger = get_logger()
-        hooks = cls._registered_hooks.copy()
-        logger.trace("Retrieved %d registered hooks", len(hooks))
-        return hooks
+        return cls._registered_hooks.copy()
 
     @classmethod
     def _get_module_and_class(cls) -> Tuple[str, str]:
@@ -95,7 +90,6 @@ class GitHook(ABC):
 
     def __init__(self) -> None:
         hook_name = self.get_hook_name()
-        self.logger.trace("Initializing hook instance: %s", hook_name)
         self.command_executor = CommandExecutor()
         self.logger.trace("Hook instance initialized: %s", hook_name)
 

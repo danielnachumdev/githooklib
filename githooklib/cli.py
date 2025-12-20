@@ -45,13 +45,11 @@ class CLI:
     """
 
     def __init__(self) -> None:
-        logger.debug("Initializing CLI")
+        logger.trace("Initializing CLI")
         self._api = API()
-        logger.trace("CLI initialized with API")
 
     def list(self) -> None:
         """List all available hooks in the project."""
-        logger.debug("Executing list command")
         try:
             hook_names = self._api.list_available_hook_names()
         except ValueError as e:
@@ -65,7 +63,6 @@ class CLI:
             logger.debug("No hooks found in project")
             return
 
-        logger.debug("Displaying %d hooks", len(hook_names))
         print(UI_MESSAGE_AVAILABLE_HOOKS_HEADER)
         for hook_name in hook_names:
             print(f"  - {hook_name}")

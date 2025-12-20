@@ -26,9 +26,6 @@ class HookDiscoveryService:
             try:
                 instance = hook_class()
                 hook_name = instance.get_hook_name()
-                logger.trace(
-                    "Hook class %s has hook name: %s", hook_class.__name__, hook_name
-                )
                 hook_classes_by_name[hook_name].append(hook_class)
             except Exception as e:
                 logger.error(
@@ -36,12 +33,10 @@ class HookDiscoveryService:
                 )
                 logger.trace("Exception details: %s", e, exc_info=True)
                 continue
-        logger.debug("Collected %d unique hook names", len(hook_classes_by_name))
         return dict(hook_classes_by_name)
 
     def __init__(self) -> None:
         self.project_root = ProjectRootGateway.find_project_root()
-        logger.trace("Project root: %s", self.project_root)
         self.hook_search_paths = [DEFAULT_HOOK_SEARCH_DIR]
         logger.trace("Default hook search paths: %s", self.hook_search_paths)
         self.module_import_gateway = ModuleImportGateway()
@@ -57,15 +52,11 @@ class HookDiscoveryService:
             logger.debug("No project root found, returning empty hooks dict")
             return {}
 
-        logger.debug("Discovering hooks")
         self._import_all_hook_modules()
         hook_classes_by_name = self._collect_hook_classes_by_name()
-        logger.trace("Hook classes by name: %s", list(hook_classes_by_name.keys()))
         self._validate_no_duplicate_hooks(hook_classes_by_name)
         hooks = {name: classes[0] for name, classes in hook_classes_by_name.items()}
-        logger.debug("Discovered %d unique hooks", len(hooks))
         self._hooks = hooks
-        logger.trace("Hooks cached: %s", list(hooks.keys()))
         return hooks
 
     def _find_hook_modules(self) -> list[Path]:
@@ -103,7 +94,6 @@ class HookDiscoveryService:
                 )
 
         logger.debug("Found %d hook modules", len(hook_modules))
-        logger.trace("Hook modules: %s", hook_modules)
         return hook_modules
 
     def _invalidate_cache(self) -> None:
@@ -129,16 +119,13 @@ class HookDiscoveryService:
 
     def _import_all_hook_modules(self) -> None:
         hook_modules = self._find_hook_modules()
-        logger.debug("Importing %d hook modules", len(hook_modules))
         for module_path in hook_modules:
-            logger.trace("Importing module: %s", module_path)
             self.module_import_gateway.import_module(module_path, self.project_root)
 
     def _validate_no_duplicate_hooks(
         self, hook_classes_by_name: dict[str, list[type[GitHook]]]
     ) -> None:
         logger.trace("Validating no duplicate hooks")
-        logger.trace("Hook classes by name: %s", list(hook_classes_by_name.keys()))
         duplicates = {
             name: classes
             for name, classes in hook_classes_by_name.items()
@@ -150,10 +137,7 @@ class HookDiscoveryService:
                 len(duplicates),
                 list(duplicates.keys()),
             )
-            logger.debug("Duplicate hooks found, raising error")
             self._raise_duplicate_hook_error(duplicates)
-        else:
-            logger.trace("No duplicate hooks found, validation passed")
 
     def _raise_duplicate_hook_error(
         self, duplicates: dict[str, list[type[GitHook]]]

@@ -20,30 +20,24 @@ logger = get_logger()
 class API:
 
     def __init__(self) -> None:
-        logger.debug("Initializing API")
+        logger.trace("Initializing API")
         self.git_gateway = GitGateway()
         self.hook_discovery_service = HookDiscoveryService()
         self.hook_management_service = HookManagementService()
         self.error_message_service = ErrorMessageService()
         self.seed_service = HookSeedingService()
         self.seed_gateway = SeedGateway()
-        logger.trace("API initialized with all services and gateways")
 
     @lru_cache
     def discover_all_hooks(self) -> dict[str, type[GitHook]]:
         logger.debug("Discovering all hooks")
         hooks = self.hook_discovery_service.discover_hooks()
-        logger.debug("Discovered %d hooks", len(hooks))
         logger.trace("Discovered hooks: %s", list(hooks.keys()))
         return hooks
 
     @lru_cache
     def list_available_hook_names(self) -> list[str]:
-        logger.debug("Listing available hook names")
-        hook_names = self.hook_management_service.list_hooks()
-        logger.debug("Found %d available hooks", len(hook_names))
-        logger.trace("Available hook names: %s", hook_names)
-        return hook_names
+        return self.hook_management_service.list_hooks()
 
     @lru_cache
     def check_hook_exists(self, hook_name: str) -> bool:

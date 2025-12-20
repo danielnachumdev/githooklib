@@ -27,11 +27,8 @@ class HookManagementService:
         logger.trace("HookManagementService initialized")
 
     def list_hooks(self) -> list[str]:
-        logger.debug("Listing hooks")
         hooks = self.hook_discovery_service.discover_hooks()
         hook_names = sorted(hooks.keys())
-        logger.debug("Found %d hooks", len(hook_names))
-        logger.trace("Hook names: %s", hook_names)
         return hook_names
 
     def install_hook(self, hook_name: str) -> bool:

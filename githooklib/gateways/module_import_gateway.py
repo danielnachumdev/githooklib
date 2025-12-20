@@ -54,7 +54,6 @@ class ModuleImportGateway:
     @staticmethod
     def _add_to_sys_path_if_needed(directory: Path) -> None:
         directory_str = str(directory)
-        logger.trace("Checking if directory is in sys.path: %s", directory_str)
         if directory_str not in sys.path:
             logger.trace("Adding directory to sys.path: %s", directory_str)
             sys.path.insert(0, directory_str)
@@ -64,12 +63,10 @@ class ModuleImportGateway:
     @lru_cache
     def import_module(self, module_path: Path, base_dir: Path) -> None:
         logger.debug("Importing module: %s", module_path)
-        logger.trace("Base directory: %s", base_dir)
         module_path = module_path.resolve()
-        logger.trace("Resolved module path: %s", module_path)
+        logger.trace("Resolved path: %s", module_path)
         try:
             relative_path = module_path.relative_to(base_dir)
-            logger.trace("Relative path: %s", relative_path)
             self._import_relative_module(relative_path, base_dir)
         except ValueError as e:
             logger.trace("Cannot make relative path: %s, importing as absolute", e)
@@ -78,10 +75,7 @@ class ModuleImportGateway:
     def _import_relative_module(self, relative_path: Path, base_dir: Path) -> None:
         parts = relative_path.parts[:-1] + (relative_path.stem,)
         module_name = ".".join(parts)
-        logger.trace("Relative module name: %s", module_name)
-        logger.trace("Adding base directory to sys.path if needed: %s", base_dir)
         self._add_to_sys_path_if_needed(base_dir)
-        logger.trace("Importing module: %s", module_name)
         __import__(module_name)
         logger.trace("Module imported successfully: %s", module_name)
 
