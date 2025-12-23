@@ -8,7 +8,7 @@ from githooks.steps import run_mypy_type_check
 class PrePush(GitHook):
     @classmethod
     def get_file_patterns(cls) -> Optional[List[str]]:
-        return ["*.py"]
+        pass
 
     @classmethod
     def get_hook_name(cls) -> str:
