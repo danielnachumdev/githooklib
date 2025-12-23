@@ -190,7 +190,6 @@ class GitHook(ABC):
                 )
                 return EXIT_SUCCESS
 
-            self.logger.debug("Executing hook '%s'", hook_name)
             result = self.execute(context)
             self.logger.debug(
                 "Hook '%s' execution completed with exit code %d",

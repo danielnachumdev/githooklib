@@ -160,6 +160,8 @@ class CommandExecutor:
             check=check,
             text=text,
             shell=shell,
+            encoding="utf-8" if text else None,
+            errors="replace" if text else None,
         )
         logger.trace("Subprocess completed: returncode=%d", result.returncode)
         logger.trace(

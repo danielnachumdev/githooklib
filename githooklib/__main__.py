@@ -31,7 +31,6 @@ def main() -> None:
         logger.error(UI_MESSAGE_COULD_NOT_FIND_PROJECT_ROOT)
         logger.debug("Project root not found, exiting")
         sys.exit(1)
-    logger.debug("Project root: %s", root)
     original_function = fire.trace.FireTrace.GetResult
     mock_function = FireGetResultMock(original_function)
     try:

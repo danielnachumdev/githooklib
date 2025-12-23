@@ -121,9 +121,7 @@ class CLI:
                 logger.warning("Hook '%s' does not exist", hook_name)
                 logger.debug("Hook '%s' not found, cannot run", hook_name)
                 return EXIT_FAILURE
-            logger.debug("Running hook '%s'", hook_name)
             exit_code = self._api.run_hook_by_name(hook_name)
-            logger.debug("Hook '%s' completed with exit code %d", hook_name, exit_code)
             return exit_code
         except ValueError as e:
             logger.error("Error running hook '%s': %s", hook_name, e)

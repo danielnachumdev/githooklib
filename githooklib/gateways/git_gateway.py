@@ -16,23 +16,22 @@ class GitGateway:
 
     @lru_cache
     def get_git_root_path(self) -> Optional[Path]:
-        logger.debug("Getting git root path")
+        logger.debug("Finding Git root")
         logger.trace("Attempting to find git root via command")
         result_via_command = self._find_git_root_via_command()
         if result_via_command:
-            logger.debug("Found git root via command: %s", result_via_command)
+            logger.debug("Git root: %s", result_via_command)
             logger.trace("git root: %s", result_via_command)
             return result_via_command
 
         logger.trace("Command method failed, trying filesystem search")
         result_via_filesystem = self._find_git_root_via_filesystem()
         if result_via_filesystem:
-            logger.debug("Found git root via filesystem: %s", result_via_filesystem)
+            logger.debug("Git root: %s", result_via_filesystem)
             logger.trace("git root: %s", result_via_filesystem)
             return result_via_filesystem
 
         logger.debug("Git root not found")
-        logger.trace("git root: None")
         return None
 
     def _find_git_root_via_command(self) -> Optional[Path]:
@@ -126,7 +125,6 @@ class GitGateway:
         files = [
             line.strip() for line in result.stdout.strip().split("\n") if line.strip()
         ]
-        logger.debug("Found %d cached index files", len(files))
         logger.trace("Cached index files: %s", files)
         return files
 
