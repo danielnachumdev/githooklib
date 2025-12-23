@@ -3,7 +3,6 @@ from .utils import FireGetResultMock
 from .cli import CLI
 import fire.value_types
 import fire
-import logging
 import os
 import platform
 import sys
@@ -11,21 +10,10 @@ from unittest.mock import patch
 
 from githooklib.gateways import ProjectRootGateway
 from githooklib import get_logger
-from githooklib.logger import TRACE
+from githooklib.logger import setup_logging
 from githooklib.ui_messages import UI_MESSAGE_COULD_NOT_FIND_PROJECT_ROOT
 
 logger = get_logger(__name__)
-
-
-def _setup_logging() -> None:
-    if "--trace" in sys.argv:
-        logger.setLevel(TRACE)
-        sys.argv.remove("--trace")
-    elif "--debug" in sys.argv:
-        logger.setLevel(logging.DEBUG)
-        sys.argv.remove("--debug")
-    else:
-        logger.setLevel(logging.INFO)
 
 
 if platform.system() != "Windows":
@@ -34,7 +22,7 @@ if platform.system() != "Windows":
 
 
 def main() -> None:
-    _setup_logging()
+    setup_logging()
     logger.trace("platform: %s", platform.platform())
     logger.trace("interpreter: %s", sys.executable)
     logger.trace("sys.argv: %s", sys.argv)

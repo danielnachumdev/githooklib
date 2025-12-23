@@ -17,7 +17,7 @@ class BaseTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.logger = get_logger(__name__, cls.__name__)
+        cls.logger = get_logger(__name__, prefix=cls.__name__)
         cls.logger.setLevel(0)
 
     def unwrap_optional(self, obj: Optional[T], msg: Optional[str] = None) -> T:

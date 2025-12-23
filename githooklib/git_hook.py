@@ -53,7 +53,7 @@ class GitHook(ABC):
         logger = get_logger()
         GitHook._registered_hooks.append(cls)
         hook_name = cls.get_hook_name()
-        cls.logger = get_logger(__name__, hook_name)
+        cls.logger = get_logger(f"{__name__}.{cls.__name__}", prefix=hook_name)
         logger.trace("Hook subclass registered: %s -> %s", cls.__name__, hook_name)
 
     @classmethod

@@ -2,7 +2,8 @@ import sys
 import unittest
 from unittest.mock import patch, MagicMock
 
-from githooklib.__main__ import main, _setup_logging
+from githooklib.__main__ import main
+from githooklib.logger import setup_logging
 from githooklib.logger import TRACE
 import logging
 from tests.base_test_case import BaseTestCase
@@ -13,8 +14,10 @@ class TestMain(BaseTestCase):
         original_argv = sys.argv.copy()
         try:
             sys.argv = ["script", "--trace", "other"]
-            _setup_logging()
-            self.assertEqual(logging.getLogger().level, TRACE)
+            setup_logging()
+            from githooklib.__main__ import logger
+
+            self.assertEqual(logger.level, TRACE)
             self.assertNotIn("--trace", sys.argv)
         finally:
             sys.argv = original_argv
@@ -23,8 +26,10 @@ class TestMain(BaseTestCase):
         original_argv = sys.argv.copy()
         try:
             sys.argv = ["script", "--debug", "other"]
-            _setup_logging()
-            self.assertEqual(logging.getLogger().level, logging.DEBUG)
+            setup_logging()
+            from githooklib.__main__ import logger
+
+            self.assertEqual(logger.level, logging.DEBUG)
             self.assertNotIn("--debug", sys.argv)
         finally:
             sys.argv = original_argv
@@ -33,8 +38,10 @@ class TestMain(BaseTestCase):
         original_argv = sys.argv.copy()
         try:
             sys.argv = ["script", "other"]
-            _setup_logging()
-            self.assertEqual(logging.getLogger().level, logging.INFO)
+            setup_logging()
+            from githooklib.__main__ import logger
+
+            self.assertEqual(logger.level, logging.INFO)
         finally:
             sys.argv = original_argv
 

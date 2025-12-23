@@ -2,14 +2,12 @@ import logging
 import sys
 import unittest
 from io import StringIO
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from githooklib.logger import (
     get_logger,
     Logger,
-    StreamRouter,
-    DisplayNameFormatter,
-    GithooklibFilter,
+    StreamHandler,
     TRACE,
     SUCCESS,
 )
@@ -21,15 +19,15 @@ class TestLogger(BaseTestCase):
         logger = get_logger("test_module")
         self.assertIsInstance(logger, Logger)
 
-    def test_get_logger_with_display_name(self):
-        logger = get_logger("test_module", "custom_name")
-        self.assertEqual(logger.display_name, "custom_name")
+    def test_get_logger_with_prefix(self):
+        logger = get_logger("test_module_prefix", prefix="test-prefix")
+        self.assertTrue(logger.propagate)
+        self.assertEqual(len(logger.handlers), 1)
 
-    def test_logger_set_level_updates_root_logger(self):
+    def test_logger_set_level_only_affects_logger(self):
         logger = get_logger("test_module")
         logger.setLevel(logging.DEBUG)
-        root_logger = logging.getLogger()
-        self.assertEqual(root_logger.level, logging.DEBUG)
+        self.assertEqual(logger.level, logging.DEBUG)
 
     def test_logger_success_method(self):
         logger = get_logger("test_module")
@@ -49,113 +47,46 @@ class TestLogger(BaseTestCase):
             call_args = mock_log.call_args
             self.assertEqual(call_args[0][0], TRACE)
 
-    def test_stream_router_writes_error_to_stderr(self):
+    def test_stream_handler_writes_error_to_stderr(self):
         stdout = StringIO()
         stderr = StringIO()
-        router = StreamRouter(stdout, stderr)
-        router.setFormatter(logging.Formatter("%(message)s"))
+        handler = StreamHandler(stdout, stderr)
+        handler.setFormatter(logging.Formatter("%(message)s"))
         record = logging.LogRecord(
             "test", logging.ERROR, "test.py", 1, "Error message", (), None
         )
         with patch(
             "builtins.__import__", side_effect=ImportError("No module named 'tqdm'")
         ):
-            router.emit(record)
+            handler.emit(record)
             self.assertGreater(len(stderr.getvalue()), 0)
 
-    def test_stream_router_writes_info_to_stdout(self):
+    def test_stream_handler_writes_info_to_stdout(self):
         stdout = StringIO()
         stderr = StringIO()
-        router = StreamRouter(stdout, stderr)
-        router.setFormatter(logging.Formatter("%(message)s"))
+        handler = StreamHandler(stdout, stderr)
+        handler.setFormatter(logging.Formatter("%(message)s"))
         record = logging.LogRecord(
             "test", logging.INFO, "test.py", 1, "Info message", (), None
         )
         with patch(
             "builtins.__import__", side_effect=ImportError("No module named 'tqdm'")
         ):
-            router.emit(record)
+            handler.emit(record)
             self.assertGreater(len(stdout.getvalue()), 0)
 
-    def test_display_name_formatter_formats_githooklib_records(self):
-        formatter = DisplayNameFormatter()
-        record = logging.LogRecord(
-            "githooklib.test",
-            logging.INFO,
-            "test.py",
-            1,
-            "Test message",
-            (),
-            None,
-        )
-        record.display_name = "githooklib"
-        result = formatter.format(record)
-        self.assertIn("githooklib", result)
-        self.assertIn("Test message", result)
+    def test_githooklib_logger_has_handler(self):
+        logger = get_logger("githooklib.test")
+        self.assertEqual(len(logger.handlers), 1)
+        handler = logger.handlers[0]
+        self.assertIn("githooklib", handler.formatter._fmt)
 
-    def test_display_name_formatter_formats_non_githooklib_records(self):
-        formatter = DisplayNameFormatter()
-        record = logging.LogRecord(
-            "other.module", logging.INFO, "test.py", 1, "Test message", (), None
-        )
-        result = formatter.format(record)
-        self.assertIn("Test message", result)
-
-    def test_githooklib_filter_filters_githooklib_logs(self):
-        filter_obj = GithooklibFilter()
-        record = logging.LogRecord(
-            "githooklib.test",
-            logging.INFO,
-            "test.py",
-            1,
-            "Test message",
-            (),
-            None,
-        )
-        result = filter_obj.filter(record)
-        self.assertTrue(result)
-
-    def test_githooklib_filter_filters_hook_files(self):
-        filter_obj = GithooklibFilter()
-        record = logging.LogRecord(
-            "other.module",
-            logging.INFO,
-            "githooks/pre_commit.py",
-            1,
-            "Test message",
-            (),
-            None,
-        )
-        result = filter_obj.filter(record)
-        self.assertTrue(result)
-
-    def test_githooklib_filter_filters_hook_files_by_name(self):
-        filter_obj = GithooklibFilter()
-        record = logging.LogRecord(
-            "other.module",
-            logging.INFO,
-            "test_hook.py",
-            1,
-            "Test message",
-            (),
-            None,
-        )
-        result = filter_obj.filter(record)
-        self.assertTrue(result)
-
-    def test_githooklib_filter_rejects_other_logs(self):
-        filter_obj = GithooklibFilter()
-        record = logging.LogRecord(
-            "other.module",
-            logging.INFO,
-            "other.py",
-            1,
-            "Test message",
-            (),
-            None,
-        )
-        result = filter_obj.filter(record)
-        self.assertFalse(result)
+    def test_hook_logger_has_own_handler(self):
+        logger = get_logger("test_hook", prefix="pre-commit")
+        self.assertTrue(logger.propagate)
+        self.assertEqual(len(logger.handlers), 1)
+        handler = logger.handlers[0]
+        self.assertIn("pre-commit", handler.formatter._fmt)
 
 
 if __name__ == "__main__":
