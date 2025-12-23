@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 from githooklib.__main__ import main
 from githooklib.logger import setup_logging
 from githooklib.logger import TRACE
+from githooklib.git_hook import GitHook
 import logging
 from tests.base_test_case import BaseTestCase
 
@@ -44,6 +45,56 @@ class TestMain(BaseTestCase):
             self.assertEqual(logger.level, logging.INFO)
         finally:
             sys.argv = original_argv
+
+    def test_setup_logging_sets_hook_logger_levels(self):
+        original_argv = sys.argv.copy()
+        try:
+            sys.argv = ["script", "--debug", "other"]
+            setup_logging()
+
+            class TestHook(GitHook):
+                @classmethod
+                def get_hook_name(cls):
+                    return "test-hook"
+
+                @classmethod
+                def get_file_patterns(cls):
+                    return None
+
+                def execute(self, context):
+                    from githooklib.definitions import HookResult
+
+                    return HookResult(success=True)
+
+            self.assertEqual(TestHook.logger.level, logging.DEBUG)
+            for handler in TestHook.logger.handlers:
+                self.assertEqual(handler.level, logging.DEBUG)
+
+            sys.argv = ["script", "--trace", "other"]
+            setup_logging()
+
+            class TestHook2(GitHook):
+                @classmethod
+                def get_hook_name(cls):
+                    return "test-hook-2"
+
+                @classmethod
+                def get_file_patterns(cls):
+                    return None
+
+                def execute(self, context):
+                    from githooklib.definitions import HookResult
+
+                    return HookResult(success=True)
+
+            self.assertEqual(TestHook2.logger.level, TRACE)
+            for handler in TestHook2.logger.handlers:
+                self.assertEqual(handler.level, TRACE)
+        finally:
+            sys.argv = original_argv
+            for hook_class in list(GitHook._registered_hooks):
+                if hook_class.__name__ in ("TestHook", "TestHook2"):
+                    GitHook._registered_hooks.remove(hook_class)
 
     def test_main_exits_when_project_root_not_found(self):
         original_argv = sys.argv.copy()

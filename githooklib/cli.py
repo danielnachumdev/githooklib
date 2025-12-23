@@ -40,8 +40,8 @@ class CLI:
     Git hooks defined in the project. Hooks are automatically discovered from the
     'githooks' directory or project root.
 
-    All commands support --debug flag for additional logging
-    information.
+    When running commands manually, you may add a --debug flag to see additional
+    logging information.
     """
 
     def __init__(self) -> None:
@@ -49,7 +49,10 @@ class CLI:
         self._api = API()
 
     def list(self) -> None:
-        """List all available hooks in the project."""
+        """List all available hooks in the project.
+
+        You may add a --debug flag to see additional logging information.
+        """
         try:
             hook_names = self._api.list_available_hook_names()
         except ValueError as e:
@@ -68,7 +71,10 @@ class CLI:
             print(f"  - {hook_name}")
 
     def show(self) -> None:
-        """Show all installed git hooks and their installation source."""
+        """Show all installed git hooks and their installation source.
+
+        You may add a --debug flag to see additional logging information.
+        """
         logger.debug("Executing show command")
         context = self._api.get_installed_hooks_with_context()
 
@@ -99,6 +105,8 @@ class CLI:
     def run(self, hook_name: str) -> int:
         """Run a hook manually for testing purposes.
 
+        You may add a --debug flag to see additional logging information.
+
         Args:
             hook_name: Name of the hook to run
 
@@ -125,6 +133,8 @@ class CLI:
 
     def install(self, hook_name: str) -> int:
         """Install a hook to .git/hooks/.
+
+        You may add a --debug flag to see additional logging information.
 
         Args:
             hook_name: Name of the hook to install
@@ -157,6 +167,8 @@ class CLI:
 
     def uninstall(self, hook_name: str) -> int:
         """Uninstall a hook from .git/hooks/.
+
+        You may add a --debug flag to see additional logging information.
 
         Args:
             hook_name: Name of the hook to uninstall
@@ -193,6 +205,8 @@ class CLI:
         """Seed an example hook from the examples folder to githooks/.
 
         If no example_name is provided, lists all available examples.
+
+        You may add a --debug flag to see additional logging information.
 
         Args:
             example_name: Name of the example to seed (filename without .py extension)

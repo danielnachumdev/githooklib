@@ -9,6 +9,8 @@ SUCCESS = logging.INFO + 1
 logging.addLevelName(TRACE, "TRACE")
 logging.addLevelName(SUCCESS, "SUCCESS")
 
+_configured_log_level: Optional[int] = None
+
 
 class LogFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
@@ -85,13 +87,21 @@ def get_logger(name: Optional[str] = None, prefix: Optional[str] = None) -> Logg
     handler.addFilter(LogFilter())
     handler.setLevel(TRACE)
     logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+
+    initial_level = (
+        _configured_log_level if _configured_log_level is not None else logging.INFO
+    )
+    logger.setLevel(initial_level)
+    handler.setLevel(initial_level)
+
     manager.loggerDict[name] = logger
 
     return logger
 
 
 def setup_logging() -> None:
+    global _configured_log_level
+
     if "--trace" in sys.argv:
         level = TRACE
         sys.argv.remove("--trace")
@@ -102,6 +112,8 @@ def setup_logging() -> None:
         sys.argv.remove("--debug")
     else:
         level = logging.INFO
+
+    _configured_log_level = level
 
     manager = logging.Logger.manager
     for logger_name, logger_instance in manager.loggerDict.items():

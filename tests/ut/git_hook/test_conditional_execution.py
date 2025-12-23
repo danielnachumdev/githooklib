@@ -172,7 +172,11 @@ class TestConditionalExecution(BaseTestCase):
 
     def test_pre_push_hook_uses_changed_files_for_push(self):
         context = GitHookContext(
-            "pre-push", [], remote_ref="origin/main", local_ref="refs/heads/main"
+            "pre-push",
+            [],
+            stdin_lines=[
+                "refs/heads/main refs/remotes/origin/main refs/heads/main refs/remotes/origin/main"
+            ],
         )
         with patch.object(
             GitGateway,
@@ -182,11 +186,11 @@ class TestConditionalExecution(BaseTestCase):
             with patch.object(GitGateway, "get_all_modified_files") as mock_all:
                 should_run = self.pre_push_hook._should_run_based_on_patterns(context)
                 self.assertTrue(should_run)
-                mock_push.assert_called_once_with("origin/main", "refs/heads/main")
+                mock_push.assert_called_once_with("refs/heads/main", "refs/heads/main")
                 mock_all.assert_not_called()
 
     def test_pre_push_hook_no_refs_falls_back_to_staged_then_all_changed_files(self):
-        context = GitHookContext("pre-push", [], remote_ref=None, local_ref=None)
+        context = GitHookContext("pre-push", [], stdin_lines=[])
         with patch.object(
             GitGateway, "get_cached_index_files", return_value=[]
         ) as mock_staged:
@@ -206,7 +210,11 @@ class TestConditionalExecution(BaseTestCase):
 
     def test_context_get_changed_files_with_refs_uses_push_diff(self):
         context = GitHookContext(
-            "pre-push", [], remote_ref="origin/main", local_ref="refs/heads/main"
+            "pre-push",
+            [],
+            stdin_lines=[
+                "refs/heads/main refs/remotes/origin/main refs/heads/main refs/remotes/origin/main"
+            ],
         )
         with patch.object(
             GitGateway,
@@ -215,7 +223,7 @@ class TestConditionalExecution(BaseTestCase):
         ) as mock_push:
             files = context.get_changed_files()
             self.assertEqual(files, ["file1.py"])
-            mock_push.assert_called_once_with("origin/main", "refs/heads/main")
+            mock_push.assert_called_once_with("refs/heads/main", "refs/heads/main")
 
     def test_context_get_changed_files_no_refs_uses_staged_then_all(self):
         context = GitHookContext("pre-commit", [])

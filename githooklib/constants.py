@@ -3,6 +3,15 @@ EXIT_FAILURE: int = 1
 EXAMPLES_DIR: str = "examples"
 TARGET_HOOKS_DIR: str = "githooks"
 DEFAULT_HOOK_SEARCH_DIR = "githooks"
+
+HOOKS_WITH_STDIN: tuple[str, ...] = (
+    "pre-push",
+    "pre-receive",
+    "post-receive",
+    "update",
+    "pre-applypatch",
+    "post-applypatch",
+)
 DELEGATOR_SCRIPT_TEMPLATE: str = f"""#!/usr/bin/env python3
 
 import subprocess
@@ -53,4 +62,9 @@ if __name__ == "__main__":
     main()
 """
 
-__all__ = ["EXIT_SUCCESS", "EXIT_FAILURE", "DELEGATOR_SCRIPT_TEMPLATE"]
+__all__ = [
+    "EXIT_SUCCESS",
+    "EXIT_FAILURE",
+    "DELEGATOR_SCRIPT_TEMPLATE",
+    "HOOKS_WITH_STDIN",
+]
