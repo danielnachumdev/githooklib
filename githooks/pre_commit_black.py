@@ -17,7 +17,7 @@ def _black_exists(command_executor: CommandExecutor) -> bool:
     return True
 
 
-def _get_modified_python_files(command_executor: CommandExecutor) -> list[str]:
+def _get_modified_python_files(command_executor: CommandExecutor) -> List[str]:
     result = command_executor.run(["git", "diff", "--name-only"])
     if not result.success:
         return []
@@ -27,7 +27,7 @@ def _get_modified_python_files(command_executor: CommandExecutor) -> list[str]:
     return [f for f in modified_files if f.endswith(".py")]
 
 
-def _stage_files(command_executor: CommandExecutor, files: list[str]) -> CommandResult:
+def _stage_files(command_executor: CommandExecutor, files: List[str]) -> CommandResult:
     return command_executor.run(["git", "add"] + files)
 
 

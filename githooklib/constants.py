@@ -1,10 +1,12 @@
+from typing import Tuple
+
 EXIT_SUCCESS: int = 0
 EXIT_FAILURE: int = 1
 EXAMPLES_DIR: str = "examples"
 TARGET_HOOKS_DIR: str = "githooks"
 DEFAULT_HOOK_SEARCH_DIR = "githooks"
 
-HOOKS_WITH_STDIN: tuple[str, ...] = (
+HOOKS_WITH_STDIN: Tuple[str, ...] = (
     "pre-push",
     "pre-receive",
     "post-receive",

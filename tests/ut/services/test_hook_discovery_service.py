@@ -53,7 +53,7 @@ class TestHookDiscoveryService(BaseTestCase):
     def test_discover_hooks_no_project_root_returns_empty(self):
         with patch.object(ProjectRootGateway, "find_project_root", return_value=None):
             service = HookDiscoveryService()
-            service.project_root = None
+            service.project_root = None  # type: ignore[assignment]
             result = service.discover_hooks()
             self.assertEqual(result, {})
 
@@ -83,8 +83,8 @@ class TestHookDiscoveryService(BaseTestCase):
         self.assertFalse(result)
 
     def test_set_hook_search_paths_updates_paths_and_invalidates_cache(self):
-        original_hooks = {"test": MockHook1}
-        self.service._hooks = original_hooks
+        original_hooks = {"test": MockHook1}  # type: ignore[assignment]
+        self.service._hooks = original_hooks  # type: ignore[assignment]
         self.service.set_hook_search_paths(["custom/path"])
         self.assertEqual(self.service.hook_search_paths, ["custom/path"])
         self.assertIsNone(self.service._hooks)
@@ -190,9 +190,12 @@ class TestHookDiscoveryService(BaseTestCase):
             GitHook._registered_hooks[:] = original_registered
 
     def test_validate_no_duplicate_hooks_passes_with_no_duplicates(self):
-        hook_classes_by_name = {"hook1": [MockHook1], "hook2": [MockHook2]}
+        hook_classes_by_name = {  # type: ignore[assignment]
+            "hook1": [MockHook1],
+            "hook2": [MockHook2],
+        }
         try:
-            self.service._validate_no_duplicate_hooks(hook_classes_by_name)
+            self.service._validate_no_duplicate_hooks(hook_classes_by_name)  # type: ignore[arg-type]
         except ValueError:
             self.fail("_validate_no_duplicate_hooks raised ValueError unexpectedly")
 
@@ -204,28 +207,30 @@ class TestHookDiscoveryService(BaseTestCase):
         self.assertIn("duplicate-hook", str(context.exception))
 
     def test_raise_duplicate_hook_error_includes_module_info(self):
-        duplicates = {"test-hook": [MockHook1, MockHook2]}
+        duplicates = {"test-hook": [MockHook1, MockHook2]}  # type: ignore[assignment]
         with patch.object(
             self.service.module_import_gateway,
             "find_module_file",
             return_value="test_module.py",
         ):
             with self.assertRaises(ValueError) as context:
-                self.service._raise_duplicate_hook_error(duplicates)
+                self.service._raise_duplicate_hook_error(
+                    duplicates
+                )  # type: ignore[arg-type]
             error_message = str(context.exception)
             self.assertIn("test-hook", error_message)
             self.assertIn("MockHook1", error_message)
             self.assertIn("MockHook2", error_message)
 
     def test_raise_duplicate_hook_error_handles_missing_module_file(self):
-        duplicates = {"test-hook": [MockHook1]}
+        duplicates = {"test-hook": [MockHook1]}  # type: ignore[assignment]
         with patch.object(
             self.service.module_import_gateway,
             "find_module_file",
             return_value=None,
         ):
             with self.assertRaises(ValueError) as context:
-                self.service._raise_duplicate_hook_error(duplicates)
+                self.service._raise_duplicate_hook_error(duplicates)  # type: ignore[arg-type]
             error_message = str(context.exception)
             self.assertIn("test-hook", error_message)
             self.assertIn("MockHook1", error_message)

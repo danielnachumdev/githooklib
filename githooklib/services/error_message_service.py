@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 from ..logger import get_logger
 from ..utils.singleton import singleton
@@ -27,7 +28,7 @@ class ErrorMessageService:
         return resolved
 
     @staticmethod
-    def _add_search_dir_info(error_lines: list[str], search_dir: Path) -> None:
+    def _add_search_dir_info(error_lines: List[str], search_dir: Path) -> None:
         logger.trace("Adding search directory info: %s", search_dir)
         if not search_dir.exists() or not search_dir.is_dir():
             logger.trace("Directory does not exist or is not a directory")
@@ -65,7 +66,7 @@ class ErrorMessageService:
         logger.trace("Error message: %s", error_message)
         return error_message
 
-    def _add_project_root_search_info(self, error_lines: list[str]) -> None:
+    def _add_project_root_search_info(self, error_lines: List[str]) -> None:
         project_root = self.hook_discovery_service.project_root
         logger.trace("Project root: %s", project_root)
         if not project_root:
@@ -82,7 +83,7 @@ class ErrorMessageService:
         else:
             error_lines.append(f"  - {project_root} (no *_hook.py files found)")
 
-    def _add_hook_search_paths_info(self, error_lines: list[str]) -> None:
+    def _add_hook_search_paths_info(self, error_lines: List[str]) -> None:
         cwd = Path.cwd()
         hook_search_paths = self.hook_discovery_service.hook_search_paths
         logger.trace("Current working directory: %s", cwd)

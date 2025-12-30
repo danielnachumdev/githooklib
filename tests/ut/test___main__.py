@@ -104,13 +104,13 @@ class TestMain(BaseTestCase):
             exit_called = False
             exit_code = None
 
-            def mock_exit(code):
+            def mock_exit(code: int) -> None:
                 nonlocal exit_called, exit_code
                 exit_called = True
                 exit_code = code
                 raise SystemExit(code)
 
-            sys.exit = mock_exit
+            sys.exit = mock_exit  # type: ignore[assignment]
             with patch(
                 "githooklib.__main__.ProjectRootGateway.find_project_root",
                 return_value=None,
@@ -154,12 +154,12 @@ class TestMain(BaseTestCase):
             sys.argv = ["script"]
             exit_called = False
 
-            def mock_exit(code):
+            def mock_exit(code: int) -> None:
                 nonlocal exit_called
                 exit_called = True
                 raise SystemExit(code)
 
-            sys.exit = mock_exit
+            sys.exit = mock_exit  # type: ignore[assignment]
             with patch(
                 "githooklib.__main__.ProjectRootGateway.find_project_root",
                 return_value=MagicMock(),
@@ -183,12 +183,12 @@ class TestMain(BaseTestCase):
             sys.argv = ["script"]
             exit_called = False
 
-            def mock_exit(code):
+            def mock_exit(code: int) -> None:
                 nonlocal exit_called
                 exit_called = True
                 raise SystemExit(code)
 
-            sys.exit = mock_exit
+            sys.exit = mock_exit  # type: ignore[assignment]
             with patch(
                 "githooklib.__main__.ProjectRootGateway.find_project_root",
                 return_value=MagicMock(),

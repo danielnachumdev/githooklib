@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from typing import List
 from unittest.mock import patch
 
 from githooklib.constants import EXIT_FAILURE
@@ -274,7 +275,7 @@ if __name__ == "__main__":
         self._git(repo, ["config", "user.email", "test@example.com"])
         self._git(repo, ["config", "user.name", "Tester"])
 
-    def _git(self, repo: Path, args: list[str]) -> None:
+    def _git(self, repo: Path, args: List[str]) -> None:
         result = subprocess.run(
             ["git"] + args, cwd=repo, capture_output=True, text=True, check=True
         )

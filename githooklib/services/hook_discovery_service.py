@@ -1,6 +1,6 @@
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Type
 
 from ..constants import DEFAULT_HOOK_SEARCH_DIR
 from ..git_hook import GitHook
@@ -17,8 +17,8 @@ class HookDiscoveryService:
     DEFAULT_HOOK_SEARCH_DIR = "githooks"
 
     @staticmethod
-    def _collect_hook_classes_by_name() -> dict[str, list[type[GitHook]]]:
-        hook_classes_by_name: dict[str, list[type[GitHook]]] = defaultdict(list)
+    def _collect_hook_classes_by_name() -> Dict[str, List[Type[GitHook]]]:
+        hook_classes_by_name: Dict[str, List[Type[GitHook]]] = defaultdict(list)
         registered_hooks = GitHook.get_registered_hooks()
         logger.trace("Found %d registered hook classes", len(registered_hooks))
         for hook_class in registered_hooks:
@@ -40,10 +40,10 @@ class HookDiscoveryService:
         self.hook_search_paths = [DEFAULT_HOOK_SEARCH_DIR]
         logger.trace("Default hook search paths: %s", self.hook_search_paths)
         self.module_import_gateway = ModuleImportGateway()
-        self._hooks: Optional[dict[str, type[GitHook]]] = None
+        self._hooks: Optional[Dict[str, Type[GitHook]]] = None
         logger.trace("HookDiscoveryService initialized")
 
-    def discover_hooks(self) -> dict[str, type[GitHook]]:
+    def discover_hooks(self) -> Dict[str, Type[GitHook]]:
         if self._hooks is not None:
             logger.debug("Using cached hooks (%d hooks)", len(self._hooks))
             logger.trace("Cached hooks: %s", list(self._hooks.keys()))
@@ -101,7 +101,7 @@ class HookDiscoveryService:
         self._hooks = None
         logger.trace("Cache cleared")
 
-    def set_hook_search_paths(self, hook_search_paths: list[str]) -> None:
+    def set_hook_search_paths(self, hook_search_paths: List[str]) -> None:
         logger.debug("Setting hook search paths: %s", hook_search_paths)
         old_paths = self.hook_search_paths
         self.hook_search_paths = hook_search_paths
@@ -123,7 +123,7 @@ class HookDiscoveryService:
             self.module_import_gateway.import_module(module_path, self.project_root)
 
     def _validate_no_duplicate_hooks(
-        self, hook_classes_by_name: dict[str, list[type[GitHook]]]
+        self, hook_classes_by_name: Dict[str, List[Type[GitHook]]]
     ) -> None:
         logger.trace("Validating no duplicate hooks")
         duplicates = {
@@ -140,7 +140,7 @@ class HookDiscoveryService:
             self._raise_duplicate_hook_error(duplicates)
 
     def _raise_duplicate_hook_error(
-        self, duplicates: dict[str, list[type[GitHook]]]
+        self, duplicates: Dict[str, List[Type[GitHook]]]
     ) -> None:
         logger.debug("Raising duplicate hook error")
         logger.trace("Duplicates: %s", list(duplicates.keys()))

@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional
 
 from ..constants import EXIT_FAILURE
 from ..gateways.git_gateway import GitGateway
@@ -14,7 +14,7 @@ logger = get_logger()
 
 @dataclass
 class InstalledHooksContext:
-    installed_hooks: dict[str, bool]
+    installed_hooks: Dict[str, bool]
     git_root: Optional[Path]
     hooks_dir_exists: bool
 
@@ -26,7 +26,7 @@ class HookManagementService:
         self.git_gateway = GitGateway()
         logger.trace("HookManagementService initialized")
 
-    def list_hooks(self) -> list[str]:
+    def list_hooks(self) -> List[str]:
         hooks = self.hook_discovery_service.discover_hooks()
         hook_names = sorted(hooks.keys())
         return hook_names

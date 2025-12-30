@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Dict, List, Optional, Type
 
 from .logger import get_logger
 from .git_hook import GitHook
@@ -29,14 +29,14 @@ class API:
         self.seed_gateway = SeedGateway()
 
     @lru_cache
-    def discover_all_hooks(self) -> dict[str, type[GitHook]]:
+    def discover_all_hooks(self) -> Dict[str, Type[GitHook]]:
         logger.debug("Discovering all hooks")
         hooks = self.hook_discovery_service.discover_hooks()
         logger.trace("Discovered hooks: %s", list(hooks.keys()))
         return hooks
 
     @lru_cache
-    def list_available_hook_names(self) -> list[str]:
+    def list_available_hook_names(self) -> List[str]:
         return self.hook_management_service.list_hooks()
 
     @lru_cache
@@ -96,7 +96,7 @@ class API:
         logger.trace("Error message: %s", message)
         return message
 
-    def list_available_example_names(self) -> list[str]:
+    def list_available_example_names(self) -> List[str]:
         logger.debug("Listing available example names")
         examples = self.seed_gateway.get_available_examples()
         logger.debug("Found %d available examples", len(examples))

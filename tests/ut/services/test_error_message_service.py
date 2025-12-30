@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from typing import List
 from unittest.mock import patch, MagicMock
 
 from githooklib.services.error_message_service import ErrorMessageService
@@ -52,7 +53,7 @@ class TestErrorMessageService(BaseTestCase):
             search_dir = Path(temp_dir)
             test_file = search_dir / "test.py"
             test_file.write_text("test")
-            error_lines = []
+            error_lines: List[str] = []
             ErrorMessageService._add_search_dir_info(error_lines, search_dir)
             self.assertEqual(len(error_lines), 1)
             self.assertIn(str(search_dir), error_lines[0])
@@ -61,7 +62,7 @@ class TestErrorMessageService(BaseTestCase):
     def test_add_search_dir_info_adds_info_for_empty_directory(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             search_dir = Path(temp_dir)
-            error_lines = []
+            error_lines: List[str] = []
             ErrorMessageService._add_search_dir_info(error_lines, search_dir)
             self.assertEqual(len(error_lines), 1)
             self.assertIn(str(search_dir), error_lines[0])
@@ -69,7 +70,7 @@ class TestErrorMessageService(BaseTestCase):
 
     def test_add_search_dir_info_adds_info_for_nonexistent_directory(self):
         nonexistent_dir = Path("/nonexistent/directory")
-        error_lines = []
+        error_lines: List[str] = []
         ErrorMessageService._add_search_dir_info(error_lines, nonexistent_dir)
         self.assertEqual(len(error_lines), 1)
         self.assertIn(str(nonexistent_dir), error_lines[0])
@@ -80,7 +81,7 @@ class TestErrorMessageService(BaseTestCase):
             search_dir = Path(temp_dir)
             init_file = search_dir / "__init__.py"
             init_file.write_text("")
-            error_lines = []
+            error_lines: List[str] = []
             ErrorMessageService._add_search_dir_info(error_lines, search_dir)
             self.assertEqual(len(error_lines), 1)
             self.assertIn("no .py files found", error_lines[0])
@@ -91,7 +92,7 @@ class TestErrorMessageService(BaseTestCase):
             hook_file = project_root / "test_hook.py"
             hook_file.write_text("test")
             self.service.hook_discovery_service.project_root = project_root
-            error_lines = []
+            error_lines: List[str] = []
             self.service._add_project_root_search_info(error_lines)
             self.assertEqual(len(error_lines), 1)
             self.assertIn(str(project_root), error_lines[0])
@@ -101,15 +102,15 @@ class TestErrorMessageService(BaseTestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             project_root = Path(temp_dir)
             self.service.hook_discovery_service.project_root = project_root
-            error_lines = []
+            error_lines: List[str] = []
             self.service._add_project_root_search_info(error_lines)
             self.assertEqual(len(error_lines), 1)
             self.assertIn(str(project_root), error_lines[0])
             self.assertIn("no *_hook.py files found", error_lines[0])
 
     def test_add_project_root_search_info_no_project_root(self):
-        self.service.hook_discovery_service.project_root = None
-        error_lines = []
+        self.service.hook_discovery_service.project_root = None  # type: ignore[assignment]
+        error_lines: List[str] = []
         self.service._add_project_root_search_info(error_lines)
         self.assertEqual(len(error_lines), 0)
 
@@ -122,7 +123,7 @@ class TestErrorMessageService(BaseTestCase):
             test_file.write_text("test")
             self.service.hook_discovery_service.hook_search_paths = ["githooks"]
             with patch("pathlib.Path.cwd", return_value=cwd):
-                error_lines = []
+                error_lines: List[str] = []
                 self.service._add_hook_search_paths_info(error_lines)
                 self.assertGreater(len(error_lines), 0)
                 self.assertIn("githooks", str(error_lines))
@@ -134,7 +135,7 @@ class TestErrorMessageService(BaseTestCase):
             test_file = abs_path / "test.py"
             test_file.write_text("test")
             self.service.hook_discovery_service.hook_search_paths = [str(abs_path)]
-            error_lines = []
+            error_lines: List[str] = []
             self.service._add_hook_search_paths_info(error_lines)
             self.assertGreater(len(error_lines), 0)
             error_text = " ".join(error_lines)
@@ -152,7 +153,7 @@ class TestErrorMessageService(BaseTestCase):
                 "path2",
             ]
             with patch("pathlib.Path.cwd", return_value=cwd):
-                error_lines = []
+                error_lines: List[str] = []
                 self.service._add_hook_search_paths_info(error_lines)
                 self.assertGreaterEqual(len(error_lines), 2)
 

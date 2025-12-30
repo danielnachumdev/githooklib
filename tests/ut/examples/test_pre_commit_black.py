@@ -1,6 +1,7 @@
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
+from typing import List
 
 from githooklib import GitHookContext
 from githooklib.command import CommandExecutor, CommandResult
@@ -70,7 +71,7 @@ class TestPreCommitBlack(BaseTestCase):
         staged_file.write_text("first=1\n")
         unstaged_file.write_text("second=2\n")
 
-    def _staged_files(self, repo: Path) -> list[str]:
+    def _staged_files(self, repo: Path) -> List[str]:
         diff_result = self._git(repo, ["diff", "--name-only", "--cached"])
         return [line for line in diff_result.stdout.splitlines() if line]
 
@@ -78,7 +79,7 @@ class TestPreCommitBlack(BaseTestCase):
         result = self.executor.python_module("black", ["--version"])
         return result.success and result.exit_code == 0
 
-    def _git(self, repo: Path, args: list[str]) -> CommandResult:
+    def _git(self, repo: Path, args: List[str]) -> CommandResult:
         result = self.executor.run(["git"] + args, cwd=repo)
         self.assertTrue(result.success, f"git {' '.join(args)} failed: {result.stderr}")
         return result
@@ -105,5 +106,5 @@ class TestPreCommitBlack(BaseTestCase):
         finally:
             PathUtils.set_cwd(original_cwd)
 
-    def _assert_staged_files(self, staged_after_hook: list[str], expected: list[str]):
+    def _assert_staged_files(self, staged_after_hook: List[str], expected: List[str]):
         self.assertCountEqual(expected, staged_after_hook)

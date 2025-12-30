@@ -4,6 +4,7 @@ import re
 import subprocess
 import unittest
 from pathlib import Path
+from typing import List
 from unittest import skip
 
 from githooklib.gateways import ProjectRootGateway
@@ -29,7 +30,7 @@ class TestWslPytest(BaseTestCase):
 
     def _discover_tests(
         self, project_root: Path, wsl_project_path: str, wsl_venv_path: str
-    ) -> list[str]:
+    ) -> List[str]:
         wsl_command = (
             f"cd {wsl_project_path} && "
             f"{wsl_venv_path}/bin/python -m pytest --collect-only -q"

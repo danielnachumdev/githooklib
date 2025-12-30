@@ -79,14 +79,18 @@ class TestLogger(BaseTestCase):
         logger = get_logger("githooklib.test")
         self.assertEqual(len(logger.handlers), 1)
         handler = logger.handlers[0]
-        self.assertIn("githooklib", handler.formatter._fmt)
+        formatter = handler.formatter
+        self.assertIsNotNone(formatter)
+        self.assertIn("githooklib", formatter._fmt)  # type: ignore[union-attr, arg-type]
 
     def test_hook_logger_has_own_handler(self):
         logger = get_logger("test_hook", prefix="pre-commit")
         self.assertTrue(logger.propagate)
         self.assertEqual(len(logger.handlers), 1)
         handler = logger.handlers[0]
-        self.assertIn("pre-commit", handler.formatter._fmt)
+        formatter = handler.formatter
+        self.assertIsNotNone(formatter)
+        self.assertIn("pre-commit", formatter._fmt)  # type: ignore[union-attr, arg-type]
 
 
 if __name__ == "__main__":

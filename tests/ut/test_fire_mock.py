@@ -3,7 +3,7 @@ import os
 import re
 import sys
 from builtins import SystemExit as BuiltinSystemExit
-from typing import Callable, Optional
+from typing import Callable, List, Optional, Tuple
 from unittest.mock import patch
 
 from githooklib.__main__ import main
@@ -36,7 +36,7 @@ class ModuleCommandRunner:
         self._original_exit = sys.exit
         self._exit_code = 0
 
-    def run_module_command(self, args: list[str]) -> tuple[int, str, str]:
+    def run_module_command(self, args: List[str]) -> Tuple[int, str, str]:
         stdout_buffer = io.StringIO()
         stderr_buffer = io.StringIO()
         self._exit_code = 0
@@ -50,7 +50,7 @@ class ModuleCommandRunner:
         return self._exit_code, stdout_buffer.getvalue(), stderr_buffer.getvalue()
 
     def _setup_environment(
-        self, args: list[str], stdout_buffer: io.StringIO, stderr_buffer: io.StringIO
+        self, args: List[str], stdout_buffer: io.StringIO, stderr_buffer: io.StringIO
     ) -> None:
         sys.argv = ["githooklib"] + args
         sys.stdout = stdout_buffer
