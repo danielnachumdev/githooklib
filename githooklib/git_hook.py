@@ -183,10 +183,22 @@ class GitHook(ABC):
                 "Hook context: hook_name=%s, argv=%s", context.hook_name, context.argv
             )
 
+            patterns = self.get_file_patterns()
+            changed_files = context.get_changed_files()
             if not self._should_run_based_on_patterns(context):
-                self.logger.debug(
+                self.logger.info(
                     "Hook '%s' skipped: no changed files match the specified patterns",
                     hook_name,
+                )
+                self.logger.debug(
+                    "Hook '%s' skipped: patterns checked: %s",
+                    hook_name,
+                    patterns,
+                )
+                self.logger.trace(
+                    "Hook '%s' skipped: changed files checked: %s",
+                    hook_name,
+                    changed_files,
                 )
                 return EXIT_SUCCESS
 

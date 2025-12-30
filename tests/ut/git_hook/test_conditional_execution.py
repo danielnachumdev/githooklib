@@ -259,9 +259,32 @@ class TestConditionalExecution(BaseTestCase):
                     with patch.object(
                         self.hook_with_patterns, "execute"
                     ) as mock_execute:
-                        exit_code = self.hook_with_patterns.run()
-                        self.assertEqual(exit_code, 0)
-                        mock_execute.assert_not_called()
+                        with patch.object(
+                            self.hook_with_patterns.logger, "info"
+                        ) as mock_info:
+                            with patch.object(
+                                self.hook_with_patterns.logger, "debug"
+                            ) as mock_debug:
+                                with patch.object(
+                                    self.hook_with_patterns.logger, "trace"
+                                ) as mock_trace:
+                                    exit_code = self.hook_with_patterns.run()
+                                    self.assertEqual(exit_code, 0)
+                                    mock_execute.assert_not_called()
+                                    mock_info.assert_called_once_with(
+                                        "Hook '%s' skipped: no changed files match the specified patterns",
+                                        "test-hook-patterns",
+                                    )
+                                    mock_debug.assert_any_call(
+                                        "Hook '%s' skipped: patterns checked: %s",
+                                        "test-hook-patterns",
+                                        ["*.py", "src/**/*.ts"],
+                                    )
+                                    mock_trace.assert_any_call(
+                                        "Hook '%s' skipped: changed files checked: %s",
+                                        "test-hook-patterns",
+                                        ["test.txt"],
+                                    )
 
     def test_run_executes_when_patterns_match(self):
         context = GitHookContext("test-hook-patterns", [])
