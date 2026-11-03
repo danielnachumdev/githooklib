@@ -8,11 +8,11 @@ updates:
     labels:
       - "dependencies"
       - "noBump"
-      groups:
-        uv-production:
-          dependency-type: "production"
-        uv-development:
-          dependency-type: "development"
+    groups:
+      uv-production:
+        dependency-type: "production"
+      uv-development:
+        dependency-type: "development"
 
   - package-ecosystem: "github-actions"
     directory: "/"
