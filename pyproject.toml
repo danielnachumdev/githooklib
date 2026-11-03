@@ -33,3 +33,16 @@ packages = ["githooklib"]
 [project.urls]
 "Homepage" = "https://github.com/danielnachumdev/githooklib"
 "Bug Tracker" = "https://github.com/danielnachumdev/githooklib/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-xdist>=3.6",
+    "black>=24.0",
+    "setuptools>=61.0",
+]
+
+# default-groups = [] so `uv sync` is runtime-only; CI uses `--group dev`.
+[tool.uv]
+default-groups = []

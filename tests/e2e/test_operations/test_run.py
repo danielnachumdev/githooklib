@@ -27,7 +27,7 @@ class TestRunE2E(OperationsBaseTestCase):
                 ["run", "pre-commit"], cwd=root, success=False, exit_code=1
             )
             self.assertEqual(1, result.exit_code)
-            self.assertIn("Test failure message", result.stdout)
+            self.assertIn("Test failure message", result.stderr)
 
     def test_hook_not_found(self):
         with self.new_temp_project() as root:
