@@ -1,6 +1,6 @@
 name: CI
 
-# Thin orchestrator — danielnachumdev/actions@v1
+# Thin orchestrator — danielnachumdev/actions@latest
 # Prefer requiring "CI / CI" and "Semver / Semver".
 
 on:
@@ -22,11 +22,11 @@ permissions:
 jobs:
   ci:
     name: CI
-    uses: danielnachumdev/actions/.github/workflows/ci.yml@v1
+    uses: danielnachumdev/actions/.github/workflows/ci.yml@latest
 
   semver:
     name: Semver
     if: github.event_name == 'pull_request'
-    uses: danielnachumdev/actions/.github/workflows/semver-ci.yml@v1
+    uses: danielnachumdev/actions/.github/workflows/semver-ci.yml@latest
     with:
       standards-ref: v1
