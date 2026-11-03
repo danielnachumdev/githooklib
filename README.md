@@ -1,37 +1,53 @@
 # githooklib
 
-A Python framework for creating, managing, and installing Git hooks with automatic discovery and CLI tools.
+**Python Git hooks as classes** — write `pre-commit` / `pre-push` (and friends) in Python, auto-discover them from `githooks/`, and install them with a small CLI.
 
-## Installation
+[![CI](https://github.com/danielnachumdev/githooklib/actions/workflows/ci.yml/badge.svg)](https://github.com/danielnachumdev/githooklib/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/githooklib.svg)](https://pypi.org/project/githooklib/)
+[![Python](https://img.shields.io/pypi/pyversions/githooklib.svg)](https://pypi.org/project/githooklib/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+Requires **Python 3.8+**.
+
+## Why githooklib?
+
+Shell one-liners and opaque hook managers make project checks hard to test and share. **githooklib** keeps hooks as normal Python classes: subclass `GitHook`, drop the file under `githooks/`, install once, and run the same code from Git or the CLI.
+
+- **Class-based hooks** with `execute(context) -> HookResult`
+- **Automatic discovery** from a project `githooks/` directory
+- **CLI** to list, install, uninstall, run, and seed example hooks
+- **Conditional runs** via `get_file_patterns()` (glob / fnmatch)
+- **MIT licensed**, tested with pytest
+
+## Install
 
 ```bash
 pip install githooklib
+# or
+uv add githooklib
 ```
 
-## Development
+Entry points: `githooklib` and `githooks` (same CLI).
 
-```bash
-uv sync --group dev
-uv run pytest
-```
+## Quick start
 
-Agent/CI notes: [`AGENTS.md`](./AGENTS.md).
-
-## Quick Start
-
-### 1. Create a Hook
-
-Create a hook by subclassing `GitHook` in a `githooks/` directory:
+### 1. Create a hook
 
 ```python
 # githooks/pre_commit.py
-from githooklib import GitHook, HookResult, GitHookContext
+from typing import List, Optional
+
+from githooklib import GitHook, GitHookContext, HookResult
 
 
 class PreCommitHook(GitHook):
-    @property
-    def hook_name(self) -> str:
+    @classmethod
+    def get_hook_name(cls) -> str:
         return "pre-commit"
+
+    @classmethod
+    def get_file_patterns(cls) -> Optional[List[str]]:
+        return None  # always run; or e.g. ["*.py"]
 
     def execute(self, context: GitHookContext) -> HookResult:
         self.logger.info("Running pre-commit checks...")
@@ -40,75 +56,59 @@ class PreCommitHook(GitHook):
             return HookResult(
                 success=False,
                 message="Tests failed. Commit aborted.",
-                exit_code=1
+                exit_code=1,
             )
         return HookResult(success=True, message="All checks passed!")
 ```
 
-### 2. Install the Hook
+### 2. Install and use
 
 ```bash
 githooklib install pre-commit
+githooklib list
+githooklib run pre-commit --debug
 ```
 
-### 3. Seed Example Hooks
+### 3. Seed an example
 
 ```bash
-githooklib seed                    # List available examples
-githooklib seed pre_commit_black   # Seed an example
+githooklib seed                 # list packaged examples
+githooklib seed pre_commit_black
 ```
 
-## CLI Commands
+## CLI
 
 ```bash
-githooklib list                    # List available hooks
-githooklib show                    # Show installed hooks
-githooklib install <hook-name>     # Install a hook
-githooklib uninstall <hook-name>   # Uninstall a hook
-githooklib run <hook-name>         # Run a hook manually
-githooklib run <hook-name> --debug # Run with debug logging
-githooklib seed [example-name]     # Seed example hooks
+githooklib list                     # available hooks in this project
+githooklib show                     # installed hooks (+ source)
+githooklib install <hook-name>
+githooklib uninstall <hook-name>
+githooklib run <hook-name> [--debug]
+githooklib seed [example-name]
 ```
 
-## API Reference
+## What you get
 
-### GitHook
+| Surface | Role |
+| -------- | ---- |
+| `GitHook` | Abstract base: `get_hook_name`, `get_file_patterns`, `execute` |
+| `GitHookContext` | Hook name, argv, project root, stdin lines, `get_changed_files()` |
+| `HookResult` / `CommandResult` | Structured success, message, exit code, command output |
+| `CommandExecutor` | Run shell / `python -m` from hooks (`self.command_executor`) |
+| CLI / `API` | Discover, install, uninstall, run, seed |
 
-Base class for all Git hooks. Subclass and implement:
+Subclass contract:
 
-- `hook_name` (property): The name of the Git hook (e.g., "pre-commit", "pre-push")
-- `execute(context: GitHookContext) -> HookResult`: Your hook logic
+- **`get_hook_name()`** — Git hook name (`pre-commit`, `pre-push`, …)
+- **`get_file_patterns()`** — `None` / `[]` = always; else fnmatch globs on changed files
+- **`execute(context)`** — return `HookResult`; use `self.logger` and `self.command_executor`
 
-Available attributes:
-- `logger`: Logger instance for logging messages
-- `command_executor`: CommandExecutor instance for running shell commands
+## Contributing & development
 
-### GitHookContext
+Agent/developer workflow (uv, tests, CI/CD labels, secrets): see [`AGENTS.md`](./AGENTS.md).
 
-Provides context when a hook is executed:
-
-- `hook_name`: The name of the hook being executed
-- `stdin_lines`: List of lines from stdin
-- `project_root`: Path to the project root
-- `get_stdin_line(index: int, default: Optional[str]) -> Optional[str]`: Get a specific line from stdin
-- `has_stdin() -> bool`: Check if stdin contains data
-
-### HookResult
-
-Return value from `execute()`:
-
-- `success`: Whether the hook passed (bool)
-- `message`: Optional message to display (str)
-- `exit_code`: Exit code (0 for success, non-zero for failure)
-
-## Requirements
-
-- Python 3.8+
+Report security issues privately via [GitHub advisories](https://github.com/danielnachumdev/githooklib/security/advisories/new).
 
 ## License
 
-See LICENSE file for details.
-
-## Homepage
-
-https://github.com/danielnachumdev/githooklib
+MIT — see [`LICENSE`](./LICENSE).
