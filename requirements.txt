@@ -1,4 +1,4 @@
-quickpub>=4.0.0
+quickpub>=4.1.3
 tqdm
 setuptools
 fire==0.7.1
