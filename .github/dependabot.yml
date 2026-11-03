@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -8,11 +8,11 @@ updates:
     labels:
       - "dependencies"
       - "noBump"
-    groups:
-      pip-production:
-        dependency-type: "production"
-      pip-development:
-        dependency-type: "development"
+      groups:
+        uv-production:
+          dependency-type: "production"
+        uv-development:
+          dependency-type: "development"
 
   - package-ecosystem: "github-actions"
     directory: "/"
