@@ -8,11 +8,13 @@ version = "1.2.0"
 authors = [
     { name = "danielnachumdev", email = "danielnachumdev@gmail.com" },
 ]
-dependencies = ['fire']
+dependencies = [
+    "fire",
+]
 keywords = []
-license = { "file" = "./LICENSE" }
+license = { file = "LICENSE" }
 description = "A Python framework (and CLI) for creating, managing, and installing Git hooks with python"
-readme = {file = "./README.md", content-type = "text/markdown"}
+readme = "README.md"
 requires-python = ">=3.8.0"
 classifiers = [
 	"Development Status :: 3 - Alpha",

@@ -8,6 +8,15 @@ A Python framework for creating, managing, and installing Git hooks with automat
 pip install githooklib
 ```
 
+## Development
+
+```bash
+uv sync --group dev
+uv run pytest
+```
+
+Agent/CI notes: [`AGENTS.md`](./AGENTS.md).
+
 ## Quick Start
 
 ### 1. Create a Hook
