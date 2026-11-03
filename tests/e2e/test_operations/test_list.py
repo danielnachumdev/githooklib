@@ -21,7 +21,7 @@ class TestListE2E(OperationsBaseTestCase):
     def test_no_hooks_found(self):
         with self.new_temp_project(hook_setup={}) as root:
             result = self.githooklib(["list"], cwd=root, success=True, exit_code=0)
-            self.assertIn(UI_MESSAGE_NO_HOOKS_FOUND, result.stdout)
+            self.assertIn(UI_MESSAGE_NO_HOOKS_FOUND, result.stderr)
 
     def test_not_in_git_repository(self):
         with self.new_temp_project(git=False) as root:

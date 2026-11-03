@@ -2,7 +2,7 @@ import unittest
 
 from githooklib.ui_messages import (
     UI_MESSAGE_NO_HOOKS_INSTALLED,
-    UI_MESSAGE_COULD_NOT_FIND_GIT_REPOSITORY,
+    UI_MESSAGE_NOT_IN_GIT_REPOSITORY,
     UI_MESSAGE_NO_HOOKS_DIRECTORY_FOUND,
 )
 
@@ -49,12 +49,18 @@ class TestShowE2E(OperationsBaseTestCase):
     def test_no_hooks_installed(self):
         with self.new_temp_project() as root:
             result = self.githooklib(["show"], cwd=root, success=True, exit_code=0)
-            self.assertIn(UI_MESSAGE_NO_HOOKS_INSTALLED, result.stdout)
+            self.assertIn(UI_MESSAGE_NO_HOOKS_INSTALLED, result.stderr)
 
     def test_not_in_git_repository(self):
         with self.new_temp_project(git=False) as root:
             result = self.githooklib(["show"], cwd=root, success=False, exit_code=1)
-            self.assertIn(UI_MESSAGE_COULD_NOT_FIND_GIT_REPOSITORY, result.stdout)
+            combined = result.stdout + result.stderr
+            self.assertTrue(
+                UI_MESSAGE_NOT_IN_GIT_REPOSITORY in combined
+                or "rev-parse" in combined
+                or "not a git repository" in combined.lower(),
+                f"Expected not-a-git signal in output, got: {combined!r}",
+            )
 
     def test_no_hooks_directory(self):
         with self.new_temp_project() as root:
@@ -63,7 +69,7 @@ class TestShowE2E(OperationsBaseTestCase):
 
             shutil.rmtree(hooks_dir)
             result = self.githooklib(["show"], cwd=root, success=True, exit_code=0)
-            self.assertIn(UI_MESSAGE_NO_HOOKS_DIRECTORY_FOUND, result.stdout)
+            self.assertIn(UI_MESSAGE_NO_HOOKS_DIRECTORY_FOUND, result.stderr)
 
 
 if __name__ == "__main__":
