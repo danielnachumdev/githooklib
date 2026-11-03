@@ -38,7 +38,7 @@ jobs:
       github.event_name == 'workflow_dispatch'
     uses: danielnachumdev/actions/.github/workflows/semver-cd.yml@latest
     with:
-      standards-ref: v1
+      standards-ref: latest
       dry-run: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
       sha: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || (github.event.inputs.sha != '' && github.event.inputs.sha || github.sha) }}
       publish-pypi: true

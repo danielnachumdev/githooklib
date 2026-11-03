@@ -29,7 +29,7 @@ jobs:
     if: github.event_name == 'pull_request'
     uses: danielnachumdev/actions/.github/workflows/semver-ci.yml@latest
     with:
-      standards-ref: v1
+      standards-ref: latest
 
   dependabot-auto-merge:
     name: Dependabot auto-merge
@@ -37,4 +37,4 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    uses: danielnachumdev/actions/.github/workflows/dependabot-auto-merge.yml@v1
+    uses: danielnachumdev/actions/.github/workflows/dependabot-auto-merge.yml@latest
