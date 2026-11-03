@@ -24,7 +24,7 @@ def run_mypy_type_check(
 
     logger.info("Running mypy type checking...")
     result = command_executor.run(
-        ["python", "-m", "mypy", "--config-file", ".\\mypy.ini"]
+        ["python", "-m", "mypy"]
     )
 
     if not result.success:

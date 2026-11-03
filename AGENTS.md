@@ -6,16 +6,22 @@ Implementation guide for coding agents. Product pitch: [`README.md`](README.md).
 
 | Item | Detail |
 | ---- | ------ |
-| Package | Python library on PyPI |
-| Toolchain | uv + `pyproject.toml` |
+| Package | Python library on PyPI (`githooklib/`) |
+| Toolchain | [uv](https://docs.astral.sh/uv/) + `pyproject.toml` / `uv.lock` |
+| Python | `>=3.8` |
 | CI/CD | [`danielnachumdev/actions`](https://github.com/danielnachumdev/actions) `@v1` |
+
+Do not commit secrets (`.pypirc`, API tokens). Publishing is via semver-cd + PyPI — no local `quickpub` / `publish.py`.
 
 ## Develop
 
 ```bash
-uv sync --group dev
-uv run pytest -q
+uv sync                 # runtime only → .venv
+uv sync --group dev     # + pytest, black, …
+uv run pytest
 ```
+
+`tool.uv.default-groups` is empty — `uv sync` does **not** install `dev` by default. CI uses `uv sync --group dev`.
 
 ## PRs / releases
 
