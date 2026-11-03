@@ -48,3 +48,76 @@ dev = [
 # default-groups = [] so `uv sync` is runtime-only; CI uses `--group dev`.
 [tool.uv]
 default-groups = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--color=yes",
+    "--durations=10",
+    "--maxfail=10",
+    "-n",
+    "auto",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow running tests",
+]
+
+[tool.mypy]
+disallow_untyped_calls = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+namespace_packages = true
+explicit_package_bases = true
+files = ["githooklib/**/*.py", "tests/**/*.py"]
+ignore_missing_imports = true
+
+[tool.pylint.main]
+ignore-paths = ["^tests/.*", "^tmp/.*"]
+
+[tool.pylint.basic]
+good-names = ["foo", "bar"]
+good-names-rgxs = ["^[a-zA-Z]"]
+
+[tool.pylint.naming]
+class-rgx = "^(_)?[A-Z][a-zA-Z0-9]*$"
+module-rgx = "^[a-zA-Z][a-zA-Z0-9_]*$"
+
+[tool.pylint.messages_control]
+disable = [
+    "W0211",
+    "W0212",
+    "C0114",
+    "C0115",
+    "C0116",
+    "E1120",
+    "E0611",
+    "W0702",
+    "W0612",
+    "R0913",
+    "C0415",
+    "R0912",
+    "R0903",
+    "R0914",
+    "R0911",
+    "R1716",
+    "W0401",
+    "R0801",
+]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pycodestyle]
+max-line-length = 120
